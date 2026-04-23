@@ -367,6 +367,33 @@
       font-size: 0.95rem;
     }
 
+    .story-objective {
+      margin-top: 1.25rem;
+      border: 1px solid rgba(255, 205, 130, 0.18);
+      background: linear-gradient(180deg, rgba(255, 186, 90, 0.07), rgba(0, 0, 0, 0.42));
+      padding: 0.85rem 1rem;
+      text-align: left;
+      max-width: 52rem;
+      margin-left: auto;
+      margin-right: auto;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+    }
+
+    .story-objective strong {
+      display: block;
+      font-size: 0.68rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255, 205, 130, 0.84);
+      margin-bottom: 0.45rem;
+    }
+
+    .story-objective span {
+      color: #f5efe4;
+      line-height: 1.7;
+      font-size: 0.92rem;
+    }
+
     .boot-meta,
     .transition-meta {
       display: flex;
@@ -1163,6 +1190,40 @@
       transform: translateY(0) scale(1);
     }
 
+    body.low-perf * {
+      animation: none !important;
+      transition: none !important;
+      filter: none !important;
+      backdrop-filter: none !important;
+    }
+
+    body.low-perf {
+      cursor: auto;
+    }
+
+    body.low-perf * {
+      cursor: auto;
+    }
+
+    body.low-perf #flashlight,
+    body.low-perf #heartbeat-vignette,
+    body.low-perf #custom-cursor,
+    body.low-perf .scanlines,
+    body.low-perf .static-noise,
+    body.low-perf .grain-vignette,
+    body.low-perf .fog-bank,
+    body.low-perf .radiation-halo,
+    body.low-perf .ceiling-light,
+    body.low-perf .warning-stripe,
+    body.low-perf .doorframe {
+      display: none !important;
+    }
+
+    body.low-perf #viewport {
+      filter: none;
+      background: #060606;
+    }
+
     @media (max-width: 720px) {
       .hud {
         top: 0.85rem;
@@ -1321,6 +1382,10 @@
         <div id="narrative-eyebrow" class="eyebrow glitch-line" data-text="SCENE">SCENE</div>
         <div id="narrative-title" class="title" style="font-size: clamp(2.1rem, 5vw, 4.5rem);">WAKE</div>
         <div id="typewriter-box" class="subtitle" style="white-space: pre-wrap; max-width: 52rem; margin: 1rem auto 0;"></div>
+        <div class="story-objective">
+          <strong>Current Objective</strong>
+          <span id="story-objective-text"></span>
+        </div>
         <div style="margin-top: 1.5rem; display:flex; justify-content:center; gap:0.85rem; flex-wrap:wrap;">
           <button id="proceed-btn" class="btn-ui" style="display:none" onclick="openTerminal()">ACKNOWLEDGE LOG</button>
           <button class="btn-ui alt" onclick="skipNarrative()">FORCE OPEN</button>
@@ -1406,6 +1471,7 @@
       transitionLock: false,
       faceDetectBusy: false,
       lowPerfMode: false,
+      quickStart: false,
       startedAt: Date.now()
     };
 
@@ -1419,6 +1485,7 @@
       narrativeEyebrow: document.getElementById('narrative-eyebrow'),
       narrativeTitle: document.getElementById('narrative-title'),
       narrativeBox: document.getElementById('typewriter-box'),
+      storyObjective: document.getElementById('story-objective-text'),
       proceedBtn: document.getElementById('proceed-btn'),
       terminal: document.getElementById('terminal-wrap'),
       feedback: document.getElementById('feedback'),
@@ -1446,8 +1513,24 @@
       entityCaption: document.getElementById('entity-caption')
     };
 
-    state.lowPerfMode = (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4)
+    const searchParams = new URLSearchParams(window.location.search);
+    const forceLite = searchParams.get('lite') === '1';
+    state.lowPerfMode = forceLite
+      || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4)
       || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (state.lowPerfMode) {
+      document.body.classList.add('low-perf');
+    }
+
+    function buildNarrative(scene, initial = false) {
+      const preface = initial
+        ? 'You are not entering a game. You are stepping back into a room that never finished evacuating.'
+        : 'The archive updates while you are inside it. The walls are keeping score.';
+      const pressure = `Chapter ${scene.chapter}. ${scene.log}`;
+      const directive = `If the SQL phrase is wrong, the corridor gets louder. If it is right, the vault stabilizes.`;
+      const warning = `Field note: ${scene.caption}`;
+      return `${preface}\n\n${pressure}\n\n${directive}\n\n${warning}`;
+    }
 
     function clamp(value, min, max) {
       return Math.min(max, Math.max(min, value));
@@ -1537,7 +1620,11 @@
       document.body.classList.add('ready');
       dom.sid.textContent = 'SID: ' + Math.random().toString(36).slice(2, 8).toUpperCase();
       dom.boot.style.display = 'none';
-      showLevelTransition(true);
+      if (state.quickStart) {
+        openTerminal();
+      } else {
+        showLevelTransition(true);
+      }
       startHUDTimer();
       startSensorLoops();
       startAudioLoops();
@@ -1851,6 +1938,7 @@
       dom.terminal.style.display = 'none';
       dom.transitionNumber.textContent = `CHAPTER ${scene.chapter}`;
       dom.transitionTitle.textContent = scene.title;
+      dom.transitionCopy.textContent = `Vault drift detected. Narrative uplink for chapter ${scene.chapter} is now streaming.`;
       dom.narrative.classList.add('active');
       dom.narrative.style.display = 'flex';
       dom.transition.classList.add('active');
@@ -1861,11 +1949,16 @@
       dom.challenge.textContent = scene.quest;
       dom.narrativeEyebrow.textContent = initial ? 'SYSTEM WAKE' : 'FIELD BRIEF';
       dom.narrativeTitle.textContent = scene.title;
-      const writerTarget = initial ? scene.log : `${scene.log}\n\nThreat profile: ${scene.caption}`;
-      typewriter(writerTarget, dom.narrativeBox, () => {
-        dom.proceedBtn.style.display = 'inline-flex';
-        state.transitionLock = false;
-      });
+      dom.storyObjective.textContent = scene.quest;
+      const writerTarget = buildNarrative(scene, initial);
+      setTimeout(() => {
+        dom.transition.classList.remove('active');
+        dom.transition.style.display = 'none';
+        typewriter(writerTarget, dom.narrativeBox, () => {
+          dom.proceedBtn.style.display = 'inline-flex';
+          state.transitionLock = false;
+        });
+      }, 850);
     }
 
     function typewriter(text, target, done, speed = 16) {
@@ -1886,7 +1979,8 @@
     }
 
     function skipNarrative() {
-      dom.narrativeBox.textContent = `${currentLevelData().log}\n\nThreat profile: ${currentLevelData().caption}`;
+      dom.narrativeBox.textContent = buildNarrative(currentLevelData(), state.currentLevel === 0);
+      dom.storyObjective.textContent = currentLevelData().quest;
       dom.proceedBtn.style.display = 'inline-flex';
       openTerminal();
     }
@@ -1897,6 +1991,7 @@
       dom.narrative.classList.remove('active');
       dom.narrative.style.display = 'none';
       dom.terminal.style.display = 'block';
+      dom.terminal.style.opacity = '1';
       dom.terminal.classList.add('terminal-open');
       dom.queryInput.value = '';
       dom.queryInput.focus();
@@ -2075,6 +2170,9 @@
     document.getElementById('hint-btn').addEventListener('click', showHint);
 
     document.addEventListener('mousemove', (event) => {
+      if (state.lowPerfMode) {
+        return;
+      }
       state.mouseX = event.clientX;
       state.mouseY = event.clientY;
       if (state.cursorRaf) return;
