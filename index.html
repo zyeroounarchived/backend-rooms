@@ -813,9 +813,31 @@
       overflow: hidden;
     }
 
+    #jumpscare-overlay::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      box-shadow: inset 0 0 180px rgba(0,0,0,0.94), inset 0 0 320px rgba(0,0,0,0.86);
+      transition: opacity 80ms linear;
+    }
+
     #jumpscare-overlay.active {
       display: flex;
       animation: scarePulse 95ms linear 8;
+      background: #000;
+    }
+
+    #jumpscare-overlay.active::after {
+      opacity: 1;
+    }
+
+    #jumpscare-overlay.active .monster-door,
+    #jumpscare-overlay.active .monster-shell::before,
+    #jumpscare-overlay.active .monster-fallback,
+    #jumpscare-overlay.active .entity-caption {
+      display: none !important;
     }
 
     #jumpscare-overlay.strobe {
@@ -845,8 +867,8 @@
 
     .monster-shell {
       position: relative;
-      width: min(88vw, 760px);
-      height: min(92vh, 920px);
+      width: 100vw;
+      height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -874,17 +896,39 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      object-position: 56% 50%;
+      object-position: center;
       opacity: 0;
       transform: scale(1.06);
-      filter: grayscale(0.16) contrast(1.38) saturate(0.55) brightness(0.88);
+      filter: grayscale(0.2) contrast(1.46) saturate(0.52) brightness(0.84);
       transition: opacity 90ms ease, transform 360ms ease;
       pointer-events: none;
     }
 
     #jumpscare-overlay.active .monster-figure {
       opacity: 1;
-      transform: scale(1.32);
+      transform: scale(1.46);
+    }
+
+    #loss-footage-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 13000;
+      display: none;
+      background: #000;
+      overflow: hidden;
+    }
+
+    #loss-footage-overlay.active {
+      display: block;
+    }
+
+    #loss-footage-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      background: #000;
+      filter: contrast(1.1) saturate(0.78);
     }
 
     .monster-fallback {
@@ -1451,7 +1495,7 @@
     <div class="monster-stage">
       <div class="monster-door"></div>
       <div class="monster-shell">
-        <img id="monster" class="monster-figure" src="image_fc8738.png" alt="Entity" />
+        <img id="monster" class="monster-figure" src="entity.jpeg" alt="Entity" />
         <div class="monster-fallback" id="monster-fallback" aria-hidden="true">
           <div class="monster-glow"></div>
           <div class="monster-door-panel"></div>
@@ -1473,6 +1517,10 @@
         <div class="entity-caption" id="entity-caption">ENTITY DETECTED</div>
       </div>
     </div>
+  </div>
+
+  <div id="loss-footage-overlay">
+    <video id="loss-footage-video" src="entity.mp4" preload="auto" playsinline></video>
   </div>
 
   <script>
@@ -1525,6 +1573,12 @@
       faceDetectBusy: false,
       lowPerfMode: false,
       quickStart: false,
+      lastJumpscareAt: 0,
+      jumpscareCooldownMs: 700,
+      scareAudio: null,
+      lossSequenceRunning: false,
+      lossAudioConfigured: false,
+      lossAudioGain: null,
       startedAt: Date.now()
     };
 
@@ -1563,7 +1617,9 @@
       monsterOverlay: document.getElementById('jumpscare-overlay'),
       monster: document.getElementById('monster'),
       monsterFallback: document.getElementById('monster-fallback'),
-      entityCaption: document.getElementById('entity-caption')
+      entityCaption: document.getElementById('entity-caption'),
+      lossOverlay: document.getElementById('loss-footage-overlay'),
+      lossVideo: document.getElementById('loss-footage-video')
     };
 
     const searchParams = new URLSearchParams(window.location.search);
@@ -1784,10 +1840,10 @@
               if (!detection) {
                 state.noFaceTicks += 1;
                 dom.bioLabel.textContent = `BIO: LOST ${state.noFaceTicks}`;
-                if (state.noFaceTicks >= 4) {
+                if (state.noFaceTicks >= 3) {
                   triggerEntityPeek('absence');
                 }
-                if (state.noFaceTicks >= 7) {
+                if (state.noFaceTicks >= 5) {
                   triggerPurge('ABSENCE');
                 }
               } else {
@@ -1797,9 +1853,10 @@
                 const mouth = Math.max(1, landmarks[66].y - landmarks[62].y);
                 const faceHeight = Math.max(1, landmarks[8].y - landmarks[27].y);
                 const ratio = mouth / faceHeight;
-                if (ratio > 0.34) {
-                  triggerGlitch(1.25);
-                  if (ratio > 0.48) {
+                if (ratio > 0.3) {
+                  triggerEntityPeek('fatigue');
+                  triggerGlitch(1.35);
+                  if (ratio > 0.42) {
                     triggerPurge('FATIGUE');
                   }
                 }
@@ -2137,8 +2194,17 @@
     }
 
     function triggerEntityPeek(reason = 'presence') {
+      const now = performance.now();
+      if (now - state.lastJumpscareAt < state.jumpscareCooldownMs) return;
       if (dom.monsterOverlay.style.display === 'flex') return;
-      dom.entityCaption.textContent = reason === 'voice' ? 'IT HEARD YOU' : reason === 'absence' ? 'IT SAW THE EMPTY SPACE' : 'SOMEONE IS IN THE HALLWAY';
+      state.lastJumpscareAt = now;
+      dom.entityCaption.textContent = reason === 'voice'
+        ? 'IT HEARD YOU'
+        : reason === 'absence'
+          ? 'IT SAW THE EMPTY SPACE'
+          : reason === 'fatigue'
+            ? 'IT SAW YOUR MOUTH MOVE'
+            : 'SOMEONE IS IN THE HALLWAY';
       dom.monsterOverlay.style.display = 'flex';
       dom.monsterOverlay.classList.add('active');
       dom.monsterOverlay.classList.add('strobe');
@@ -2159,38 +2225,80 @@
     }
 
     function triggerPurge(reason) {
+      if (state.lossSequenceRunning) return;
+      state.lossSequenceRunning = true;
       state.gameActive = false;
+      state.lastJumpscareAt = performance.now();
       dom.monsterOverlay.style.display = 'flex';
       dom.monsterOverlay.classList.add('active');
       dom.monsterOverlay.classList.add('strobe');
       dom.entityCaption.textContent = reason === 'FATIGUE' ? 'FATIGUE DETECTED' : reason === 'ABSENCE' ? 'SUBJECT LOST' : 'THE DOOR IS OPEN';
       playScareHit(state.maxScare ? 1.95 : 1.15);
       applyScareImpact(state.maxScare ? 980 : 360, state.maxScare ? 2.2 : 1.25);
-      if (state.audioCtx) {
-        const ctx = state.audioCtx;
-        const now = ctx.currentTime;
-        const buffer = ctx.createBuffer(1, ctx.sampleRate * 2.5, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < data.length; i++) {
-          const t = i / data.length;
-          data[i] = (Math.random() * 2 - 1) * (1 - t * 0.2);
-        }
-        const src = ctx.createBufferSource();
-        src.buffer = buffer;
-        const filter = ctx.createBiquadFilter();
-        filter.type = 'bandpass';
-        filter.frequency.value = 220;
-        filter.Q.value = 0.9;
-        const gain = ctx.createGain();
-        gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.exponentialRampToValueAtTime(0.9, now + 0.03);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.2);
-        src.connect(filter);
-        filter.connect(gain);
-        gain.connect(ctx.destination);
-        src.start();
+      setTimeout(() => {
+        playLossFootageAndRestart();
+      }, state.maxScare ? 1450 : 1100);
+    }
+
+    function ensureLossAudioBoost() {
+      if (!state.audioCtx || state.lossAudioConfigured) return;
+      const source = state.audioCtx.createMediaElementSource(dom.lossVideo);
+      const gain = state.audioCtx.createGain();
+      gain.gain.value = 2.0;
+      source.connect(gain);
+      gain.connect(state.audioCtx.destination);
+      state.lossAudioGain = gain;
+      state.lossAudioConfigured = true;
+    }
+
+    async function playLossFootageAndRestart() {
+      dom.monsterOverlay.style.display = 'none';
+      dom.monsterOverlay.classList.remove('active');
+      dom.monsterOverlay.classList.remove('strobe');
+
+      if (state.scareAudio) {
+        try {
+          state.scareAudio.pause();
+        } catch (error) {}
       }
-      setTimeout(() => location.reload(), state.maxScare ? 3400 : 2600);
+
+      if (state.audioCtx && state.audioCtx.state === 'suspended') {
+        try {
+          await state.audioCtx.resume();
+        } catch (error) {}
+      }
+
+      ensureLossAudioBoost();
+      dom.lossOverlay.classList.add('active');
+      dom.lossVideo.currentTime = 0;
+      dom.lossVideo.muted = false;
+      dom.lossVideo.volume = 1;
+
+      const restart = () => {
+        dom.lossOverlay.classList.remove('active');
+        location.reload();
+      };
+
+      const onEnded = () => {
+        dom.lossVideo.removeEventListener('ended', onEnded);
+        dom.lossVideo.removeEventListener('error', onError);
+        restart();
+      };
+
+      const onError = () => {
+        dom.lossVideo.removeEventListener('ended', onEnded);
+        dom.lossVideo.removeEventListener('error', onError);
+        restart();
+      };
+
+      dom.lossVideo.addEventListener('ended', onEnded);
+      dom.lossVideo.addEventListener('error', onError);
+
+      try {
+        await dom.lossVideo.play();
+      } catch (error) {
+        onError();
+      }
     }
 
     function applyScareImpact(durationMs = 400, intensity = 1.2) {
@@ -2216,14 +2324,33 @@
       requestAnimationFrame(pulse);
     }
 
-    function playScareHit(power = 1) {
+    async function playScareHit(power = 1) {
+      let usedMp3 = false;
+      // Prefer authored scare audio for consistent impact.
+      try {
+        if (!state.scareAudio) {
+          state.scareAudio = new Audio('kk.mp3');
+          state.scareAudio.preload = 'auto';
+          state.scareAudio.loop = false;
+        }
+        state.scareAudio.pause();
+        state.scareAudio.currentTime = 0;
+        state.scareAudio.volume = clamp((state.maxScare ? 1 : 0.78) * power * 0.6, 0.05, 1);
+        await state.scareAudio.play();
+        usedMp3 = true;
+      } catch (error) {
+        // Fall through to synthesized audio if kk.mp3 is unavailable.
+      }
+
+      if (usedMp3) return;
+
       if (!state.audioCtx) return;
       const ctx = state.audioCtx;
       const now = ctx.currentTime;
       const master = ctx.createGain();
       master.gain.setValueAtTime(0.0001, now);
       const attack = state.maxScare ? 0.015 : 0.025;
-      const hold = state.maxScare ? 1.15 : 0.9;
+      const hold = state.maxScare ? 2.9 : 1.6;
       master.gain.exponentialRampToValueAtTime(clamp(0.56 * power, 0.2, 0.95), now + attack);
       master.gain.exponentialRampToValueAtTime(0.0001, now + hold);
       master.connect(ctx.destination);
@@ -2239,7 +2366,7 @@
       scream.connect(screamFilter);
       screamFilter.connect(master);
       scream.start(now);
-      scream.stop(now + (state.maxScare ? 0.72 : 0.55));
+      scream.stop(now + (state.maxScare ? 1.9 : 1.15));
 
       const hiss = ctx.createBufferSource();
       hiss.buffer = createNoiseBuffer(0.9);
@@ -2254,7 +2381,7 @@
       hissFilter.connect(hissGain);
       hissGain.connect(master);
       hiss.start(now);
-      hiss.stop(now + (state.maxScare ? 0.62 : 0.43));
+      hiss.stop(now + (state.maxScare ? 2.3 : 1.1));
 
       const slam = ctx.createOscillator();
       slam.type = 'triangle';
@@ -2267,7 +2394,7 @@
       slam.connect(slamGain);
       slamGain.connect(master);
       slam.start(now);
-      slam.stop(now + 0.31);
+      slam.stop(now + 0.62);
 
       if (state.maxScare) {
         const sub = ctx.createOscillator();
@@ -2281,7 +2408,7 @@
         sub.connect(subGain);
         subGain.connect(master);
         sub.start(now);
-        sub.stop(now + 0.48);
+        sub.stop(now + 1.4);
       }
     }
 
