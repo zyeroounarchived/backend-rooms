@@ -1,0 +1,2123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TERMINAL 01: THE FINAL SYNC</title>
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Cormorant+Garamond:wght@500;600;700&family=IM+Fell+English+SC&display=swap');
+
+    :root {
+      --bg: #010101;
+      --panel: rgba(4, 5, 6, 0.96);
+      --panel-strong: rgba(0, 0, 0, 0.995);
+      --text: #eee5d8;
+      --muted: rgba(236, 231, 221, 0.34);
+      --green: #c0ff9a;
+      --green-dim: rgba(180, 255, 141, 0.18);
+      --amber: #ffd38a;
+      --amber-dim: rgba(255, 206, 122, 0.15);
+      --red: #ff6262;
+      --red-dim: rgba(255, 98, 98, 0.2);
+      --cyan: #8be9ff;
+      --line: rgba(255, 255, 255, 0.06);
+      --floor-a: #8f846d;
+      --floor-b: #5f584a;
+      --scene-accent: #e9c07d;
+      --scene-fog: rgba(255, 168, 74, 0.08);
+      --scene-glow: rgba(255, 160, 48, 0.16);
+      --warning: #ff6d18;
+      --hud-shadow: rgba(0, 0, 0, 0.92);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      cursor: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top, rgba(255, 176, 72, 0.06) 0%, rgba(5, 5, 5, 0.96) 34%, #000 76%),
+        linear-gradient(180deg, #070707 0%, #010101 100%);
+    }
+
+    body {
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      text-rendering: geometricPrecision;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before,
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    body::before {
+      background:
+        radial-gradient(circle at 50% 18%, rgba(255, 187, 94, 0.08), transparent 34%),
+        radial-gradient(circle at 18% 58%, rgba(180, 255, 141, 0.03), transparent 32%),
+        radial-gradient(circle at 82% 72%, rgba(255, 98, 98, 0.07), transparent 24%),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.015) 0 1px, transparent 1px 48px);
+      mix-blend-mode: screen;
+      opacity: 0.95;
+      filter: blur(0.2px);
+    }
+
+    body::after {
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.03), transparent 42%);
+      background-size: 100% 3px, 100% 100%;
+      opacity: 0.24;
+      mix-blend-mode: overlay;
+      animation: veilDrift 16s linear infinite;
+    }
+
+    #viewport {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 22%, rgba(255, 186, 90, 0.05), transparent 24%),
+        linear-gradient(180deg, rgba(2, 2, 3, 0.96), rgba(1, 1, 2, 0.99));
+      filter: saturate(0.74) contrast(1.18) brightness(0.84);
+      transition: filter 180ms ease;
+    }
+
+    .facility-layer {
+      position: absolute;
+      inset: 0;
+      perspective: 1200px;
+      background:
+        radial-gradient(circle at 50% 30%, var(--scene-glow), transparent 38%),
+        linear-gradient(180deg, rgba(255,255,255,0.015), transparent 28%),
+        linear-gradient(90deg, rgba(255,255,255,0.015), transparent 18%, rgba(255,255,255,0.015));
+      overflow: hidden;
+    }
+
+    .ceiling-light {
+      position: absolute;
+      top: 4%;
+      left: 10%;
+      width: 80%;
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
+      box-shadow: 0 0 40px rgba(255, 210, 140, 0.1), 0 0 90px rgba(255, 255, 255, 0.03);
+      opacity: 0.28;
+      animation: humFlicker 7s infinite;
+    }
+
+    .doorframe {
+      position: absolute;
+      top: 8%;
+      right: 6%;
+      width: 22vw;
+      max-width: 360px;
+      height: 74vh;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-bottom: none;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.03), transparent 24%),
+        linear-gradient(90deg, rgba(255,255,255,0.03), transparent 20%, rgba(255,255,255,0.02));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+      opacity: 0.42;
+      transform: translateZ(-120px);
+    }
+
+    .floor {
+      position: absolute;
+      bottom: -6%;
+      left: -140%;
+      width: 380%;
+      height: 104%;
+      background-color: var(--floor-a);
+      background-image:
+        linear-gradient(var(--floor-b) 2px, transparent 2px),
+        linear-gradient(90deg, var(--floor-b) 2px, transparent 2px);
+      background-size: 116px 116px;
+      transform-origin: bottom;
+      transform: rotateX(82deg);
+      opacity: 0.34;
+      filter: blur(0.15px);
+    }
+
+    .floor::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, transparent, rgba(0,0,0,0.18) 58%, rgba(0,0,0,0.44)),
+        repeating-linear-gradient(90deg, transparent 0 110px, rgba(255,255,255,0.04) 110px 112px);
+      opacity: 0.7;
+    }
+
+    .warning-stripe {
+      position: absolute;
+      bottom: 17%;
+      left: 0;
+      width: 100%;
+      height: 44px;
+      background: repeating-linear-gradient(45deg, rgba(255, 135, 30, 0.2) 0 18px, rgba(0, 0, 0, 0.18) 18px 36px);
+      opacity: 0.38;
+      filter: blur(0.4px);
+      transform: rotate(-1deg);
+    }
+
+    .fog-bank {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 48% 42%, var(--scene-fog), transparent 31%),
+        radial-gradient(circle at 18% 70%, rgba(255,255,255,0.03), transparent 22%),
+        radial-gradient(circle at 78% 64%, rgba(255,255,255,0.05), transparent 18%);
+      opacity: 0.8;
+      animation: driftFog 14s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+
+    .radiation-halo {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 32%, rgba(255, 206, 100, 0.06), transparent 18%),
+        radial-gradient(circle at 50% 30%, rgba(255, 140, 0, 0.06), transparent 26%),
+        radial-gradient(circle at 50% 50%, transparent 50%, rgba(0,0,0,0.8) 100%);
+      mix-blend-mode: screen;
+      opacity: 0.54;
+      pointer-events: none;
+    }
+
+    .radiation-halo::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 45%, transparent 0 42%, rgba(0,0,0,0.28) 67%, rgba(0,0,0,0.92) 100%),
+        radial-gradient(circle at 50% 48%, rgba(255, 172, 62, 0.06), transparent 20%);
+      animation: pulseDark 7.5s ease-in-out infinite;
+    }
+
+    .scanlines,
+    .static-noise,
+    .grain-vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 80;
+    }
+
+    .scanlines {
+      background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 100% 3px;
+      opacity: 0.23;
+      mix-blend-mode: overlay;
+    }
+
+    .static-noise {
+      opacity: 0.12;
+      background-image:
+        radial-gradient(circle at 10% 20%, rgba(255,255,255,0.15) 0 1px, transparent 1px),
+        radial-gradient(circle at 70% 90%, rgba(255,255,255,0.1) 0 1px, transparent 1px),
+        radial-gradient(circle at 20% 70%, rgba(255,255,255,0.08) 0 1px, transparent 1px);
+      background-size: 140px 140px, 180px 180px, 110px 110px;
+      animation: staticShift 1.8s steps(2, end) infinite;
+    }
+
+    .grain-vignette {
+      box-shadow: inset 0 0 220px rgba(0,0,0,0.97), inset 0 0 320px rgba(0,0,0,0.94);
+    }
+
+    #boot-screen,
+    #narrative-overlay,
+    #transition-overlay,
+    #jumpscare-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    #boot-screen {
+      background:
+        radial-gradient(circle at center, rgba(255, 208, 124, 0.05), transparent 32%),
+        linear-gradient(180deg, #000, #050505 60%, #000);
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 1.6rem;
+    }
+
+    .boot-card,
+    .transition-card,
+    .narrative-card {
+      width: min(92vw, 760px);
+      border: 1px solid rgba(255,255,255,0.08);
+      background:
+        linear-gradient(180deg, rgba(8, 8, 9, 0.97), rgba(1, 1, 2, 0.99)),
+        radial-gradient(circle at 50% 0%, rgba(255, 158, 44, 0.05), transparent 30%);
+      box-shadow:
+        0 0 90px rgba(0,0,0,0.94),
+        inset 0 0 0 1px rgba(255,255,255,0.02),
+        inset 0 0 40px rgba(255, 128, 43, 0.04);
+      backdrop-filter: blur(14px) saturate(0.85);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .boot-card::before,
+    .transition-card::before,
+    .narrative-card::before,
+    #terminal-wrap::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.05) 40%, rgba(255, 174, 72, 0.08) 50%, transparent 100%);
+      opacity: 0.48;
+      transform: translateX(-80%);
+      animation: shimmer 6s linear infinite;
+      pointer-events: none;
+    }
+
+    .glitch-line {
+      position: relative;
+    }
+
+    .glitch-line::before,
+    .glitch-line::after {
+      content: attr(data-text);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      overflow: hidden;
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    .glitch-line::before {
+      transform: translate(1px, 0);
+      color: rgba(255, 90, 90, 0.55);
+      animation: glitchDrift 2.4s infinite steps(2, end);
+    }
+
+    .glitch-line::after {
+      transform: translate(-1px, 0);
+      color: rgba(140, 232, 255, 0.35);
+      animation: glitchDrift 3s infinite steps(2, end) reverse;
+    }
+
+    .boot-inner,
+    .transition-inner,
+    .narrative-inner {
+      position: relative;
+      z-index: 1;
+      padding: clamp(1.5rem, 3vw, 2.75rem);
+    }
+
+    .eyebrow {
+      color: rgba(255, 205, 130, 0.92);
+      letter-spacing: 0.52em;
+      text-transform: uppercase;
+      font-size: 0.66rem;
+      margin-bottom: 1rem;
+      opacity: 0.9;
+      font-family: 'IM Fell English SC', serif;
+    }
+
+    .title {
+      font-family: 'IM Fell English SC', serif;
+      font-size: clamp(2.8rem, 7vw, 5.8rem);
+      line-height: 0.88;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #fff4de;
+      text-shadow:
+        0 0 18px rgba(255,255,255,0.05),
+        0 0 32px rgba(255, 170, 72, 0.16),
+        2px 0 0 rgba(255, 88, 88, 0.06);
+    }
+
+    .subtitle {
+      margin-top: 1rem;
+      color: rgba(242, 235, 224, 0.74);
+      line-height: 1.9;
+      letter-spacing: 0.06em;
+      font-size: 0.95rem;
+    }
+
+    .boot-meta,
+    .transition-meta {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 1.5rem;
+    }
+
+    .chip {
+      border: 1px solid rgba(255, 202, 126, 0.12);
+      background: rgba(255, 182, 88, 0.03);
+      color: rgba(244, 240, 230, 0.8);
+      font-size: 0.68rem;
+      letter-spacing: 0.26em;
+      padding: 0.65rem 0.9rem;
+      text-transform: uppercase;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+    }
+
+    .btn-ui {
+      appearance: none;
+      border: 1px solid rgba(180,255,141,0.62);
+      background: linear-gradient(180deg, rgba(180,255,141,0.07), rgba(180,255,141,0.015));
+      color: var(--green);
+      padding: 0.92rem 1.2rem;
+      font-family: inherit;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      font-size: 0.77rem;
+      transition: transform 140ms ease, background 180ms ease, color 180ms ease, box-shadow 180ms ease, border-color 180ms ease, letter-spacing 180ms ease;
+      cursor: pointer;
+      text-shadow: 0 0 10px rgba(180,255,141,0.2);
+    }
+
+    .btn-ui:hover,
+    .btn-ui:focus-visible {
+      transform: translateY(-1px);
+      letter-spacing: 0.28em;
+      background: rgba(180,255,141,0.95);
+      color: #041004;
+      box-shadow: 0 0 28px rgba(180,255,141,0.34), 0 0 50px rgba(255, 163, 55, 0.1);
+      outline: none;
+    }
+
+    .btn-ui.alt {
+      border-color: rgba(255, 202, 126, 0.16);
+      color: rgba(248, 242, 232, 0.84);
+      background: rgba(255, 202, 126, 0.03);
+    }
+
+    .btn-ui.alt:hover,
+    .btn-ui.alt:focus-visible {
+      background: rgba(255, 210, 150, 0.9);
+      color: #090909;
+      box-shadow: 0 0 18px rgba(255,210,150,0.2);
+    }
+
+    #transition-overlay {
+      z-index: 7000;
+      background: radial-gradient(circle at center, rgba(255, 176, 72, 0.05), rgba(0, 0, 0, 0.96) 58%);
+      backdrop-filter: blur(12px) saturate(0.8);
+      opacity: 0;
+      transition: opacity 260ms ease;
+    }
+
+    #transition-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .transition-card {
+      transform: translateY(12px) scale(0.98);
+      animation: riseCard 620ms cubic-bezier(0.2, 0.84, 0.2, 1) forwards;
+    }
+
+    .chapter-number {
+      color: rgba(255, 205, 130, 0.94);
+      letter-spacing: 0.56em;
+      text-transform: uppercase;
+      font-size: 0.64rem;
+      margin-bottom: 0.8rem;
+      font-family: 'IM Fell English SC', serif;
+    }
+
+    .chapter-title {
+      font-family: 'IM Fell English SC', serif;
+      font-size: clamp(2.2rem, 5vw, 4.2rem);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #fff2db;
+      text-shadow: 0 0 20px rgba(255, 176, 72, 0.12);
+    }
+
+    .chapter-copy {
+      margin-top: 1rem;
+      font-size: 0.98rem;
+      line-height: 2;
+      color: rgba(248, 246, 239, 0.72);
+      max-width: 46rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .transition-bars {
+      display: flex;
+      gap: 0.4rem;
+      justify-content: center;
+      margin-top: 1.6rem;
+    }
+
+    .transition-bars span {
+      width: 0.75rem;
+      height: 0.75rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.14);
+      box-shadow: 0 0 0 rgba(0,0,0,0);
+      animation: barPulse 1.1s infinite ease-in-out;
+    }
+
+    .transition-bars span:nth-child(2) { animation-delay: 120ms; }
+    .transition-bars span:nth-child(3) { animation-delay: 240ms; }
+    .transition-bars span:nth-child(4) { animation-delay: 360ms; }
+    .transition-bars span:nth-child(5) { animation-delay: 480ms; }
+
+    .hud {
+      position: absolute;
+      top: 1.4rem;
+      left: 1.4rem;
+      right: 1.4rem;
+      z-index: 120;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      color: rgba(238, 232, 220, 0.78);
+      font-size: 0.68rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      text-shadow: 0 1px 2px var(--hud-shadow), 0 0 10px rgba(255, 176, 72, 0.08);
+      pointer-events: none;
+    }
+
+    .hud-left,
+    .hud-right {
+      display: grid;
+      gap: 0.45rem;
+      align-items: start;
+    }
+
+    .hud-right {
+      text-align: right;
+      justify-items: end;
+    }
+
+    .meter-strip {
+      width: min(240px, 32vw);
+      height: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255, 205, 130, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .meter-strip span {
+      position: absolute;
+      inset: 0;
+      transform-origin: left center;
+      transform: scaleX(0.1);
+      background: linear-gradient(90deg, rgba(123,255,132,0.75), rgba(229,199,124,0.95), rgba(255,78,78,0.98));
+      transition: transform 160ms ease;
+    }
+
+    #terminal-wrap {
+      position: relative;
+      z-index: 200;
+      width: min(92vw, 920px);
+      padding: clamp(1.4rem, 3vw, 2.4rem);
+      background:
+        linear-gradient(180deg, rgba(2, 2, 2, 0.99), rgba(0, 0, 0, 1)),
+        radial-gradient(circle at 50% 0%, rgba(255, 168, 58, 0.06), transparent 40%);
+      border: 1px solid rgba(255, 205, 130, 0.12);
+      box-shadow:
+        0 0 140px rgba(0,0,0,0.96),
+        inset 0 0 0 1px rgba(255,255,255,0.02),
+        inset 0 0 40px rgba(255, 169, 58, 0.035);
+      display: none;
+      transform: translateY(8px) scale(0.98);
+      transition: transform 220ms ease, opacity 220ms ease, box-shadow 220ms ease;
+    }
+
+    .terminal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+      color: rgba(245,239,228,0.42);
+      font-size: 0.64rem;
+      letter-spacing: 0.38em;
+      text-transform: uppercase;
+    }
+
+    .terminal-toolbar {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    .objective-module {
+      position: relative;
+      border: 1px solid rgba(255, 205, 130, 0.1);
+      background: linear-gradient(180deg, rgba(255, 186, 90, 0.05), rgba(180, 255, 141, 0.01));
+      padding: 1rem 1rem 1.1rem;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+
+    .objective-module::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(180deg, transparent 0 18px, rgba(255,255,255,0.02) 18px 19px);
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    #challenge-text {
+      position: relative;
+      z-index: 1;
+      color: #f3ede3;
+      font-size: 0.96rem;
+      line-height: 1.8;
+      text-shadow: 0 0 10px rgba(255, 177, 74, 0.08);
+    }
+
+    .query-console {
+      display: grid;
+      gap: 0.9rem;
+      padding: 1rem;
+      border: 1px solid rgba(255, 205, 130, 0.09);
+      background:
+        linear-gradient(180deg, rgba(0,0,0,0.7), rgba(0,0,0,0.82)),
+        radial-gradient(circle at 10% 10%, rgba(255, 168, 58, 0.025), transparent 26%);
+    }
+
+    .query-row {
+      display: flex;
+      gap: 0.7rem;
+      align-items: center;
+    }
+
+    .prompt-label {
+      color: rgba(255, 205, 130, 0.3);
+      white-space: nowrap;
+      font-size: 0.82rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+    }
+
+    .query-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--green);
+      font-family: inherit;
+      font-size: 1rem;
+      line-height: 1.6;
+      outline: none;
+      caret-color: var(--green);
+      text-shadow: 0 0 12px rgba(180, 255, 141, 0.08);
+    }
+
+    .query-input::placeholder {
+      color: rgba(255, 205, 130, 0.22);
+    }
+
+    .feedback {
+      min-height: 3rem;
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: rgba(245, 248, 243, 0.54);
+      letter-spacing: 0.02em;
+    }
+
+    .feedback.error { color: #ff7d7d; }
+    .feedback.good { color: var(--green); }
+
+    .status-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.7rem;
+      margin-top: 1rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(240, 242, 236, 0.48);
+    }
+
+    .status-tile {
+      border: 1px solid rgba(255, 205, 130, 0.08);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.008)),
+        radial-gradient(circle at 50% 0%, rgba(255, 168, 58, 0.025), transparent 30%);
+      padding: 0.75rem 0.8rem;
+      display: grid;
+      gap: 0.45rem;
+    }
+
+    .status-tile strong {
+      font-size: 0.95rem;
+      color: #f8f7f1;
+      letter-spacing: 0.14em;
+      font-weight: 700;
+      text-shadow: 0 0 10px rgba(255, 176, 72, 0.08);
+    }
+
+    .status-tile span {
+      color: rgba(240,244,235,0.55);
+    }
+
+    .status-bar {
+      position: relative;
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      overflow: hidden;
+    }
+
+    .status-bar i {
+      position: absolute;
+      inset: 0;
+      display: block;
+      transform-origin: left center;
+      transform: scaleX(0.2);
+      background: linear-gradient(90deg, rgba(123,255,132,0.8), rgba(229,199,124,0.95), rgba(255,78,78,0.96));
+      transition: transform 180ms ease;
+    }
+
+    .micro-suggestions {
+      display: flex;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+    }
+
+    .mini-chip {
+      border: 1px solid rgba(255, 205, 130, 0.09);
+      background: rgba(255,255,255,0.03);
+      color: rgba(245,248,242,0.62);
+      padding: 0.45rem 0.55rem;
+      letter-spacing: 0.14em;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      transition: 160ms ease;
+      cursor: pointer;
+    }
+
+    .mini-chip:hover,
+    .mini-chip:focus-visible {
+      border-color: rgba(255, 205, 130, 0.5);
+      color: var(--green);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    #flashlight {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 30;
+      background: radial-gradient(circle at 50% 50%, transparent 0%, rgba(0,0,0,0.985) 31%, rgba(0,0,0,0.999) 68%);
+      transition: background 90ms linear;
+    }
+
+    #heartbeat-vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 40;
+      box-shadow: inset 0 0 220px rgba(0,0,0,0.98);
+      transition: box-shadow 90ms ease;
+    }
+
+    #custom-cursor {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      width: 22px;
+      height: 22px;
+      transform: translate(-50%, -50%);
+      border: 1px solid rgba(255, 205, 130, 0.92);
+      border-radius: 50%;
+      z-index: 11000;
+      pointer-events: none;
+      mix-blend-mode: difference;
+      box-shadow: 0 0 18px rgba(255, 205, 130, 0.14);
+    }
+
+    #jumpscare-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 12000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, rgba(255,255,255,0.04), rgba(0,0,0,1) 60%);
+      overflow: hidden;
+    }
+
+    #jumpscare-overlay.strobe {
+      animation: strobe-anim 0.08s infinite;
+    }
+
+    .monster-stage {
+      position: relative;
+      width: min(100vw, 100vw);
+      height: 100vh;
+      display: grid;
+      place-items: center;
+    }
+
+    .monster-door {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.015) 0 34%, rgba(0,0,0,0.48) 34% 100%),
+        linear-gradient(180deg, rgba(255,255,255,0.035), transparent 36%, rgba(0,0,0,0.56));
+      opacity: 0.95;
+    }
+
+    .monster-shell {
+      position: relative;
+      width: min(88vw, 760px);
+      height: min(92vh, 920px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translateY(2vh) scale(1.02);
+      filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.05));
+    }
+
+    .monster-shell::before {
+      content: '';
+      position: absolute;
+      inset: 6% 10%;
+      background: radial-gradient(circle at 70% 34%, rgba(255,255,255,0.035), transparent 16%), radial-gradient(circle at 42% 52%, rgba(255,98,98,0.08), transparent 28%);
+      mix-blend-mode: screen;
+      pointer-events: none;
+      animation: tremor 0.06s infinite;
+    }
+
+    .monster-figure {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .monster-fallback {
+      display: flex;
+      position: absolute;
+      inset: 0;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 7%;
+      pointer-events: none;
+    }
+
+    .monster-door-panel {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(180deg, #d9c6a5 0%, #a57c50 30%, #82603a 100%);
+      border-right: 1px solid rgba(0,0,0,0.32);
+      box-shadow: inset -24px 0 40px rgba(0,0,0,0.24);
+      transform: translateX(-2%);
+      clip-path: inset(0 0 0 0);
+    }
+
+    .monster-door-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.08), transparent 12%, transparent 58%, rgba(255,255,255,0.04) 92%, transparent 100%),
+        repeating-linear-gradient(180deg, transparent 0 104px, rgba(255,255,255,0.08) 104px 110px);
+      opacity: 0.42;
+    }
+
+    .monster-person {
+      position: relative;
+      width: 31%;
+      height: 78%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      transform: translateY(2%) translateX(4%);
+    }
+
+    .monster-head {
+      width: 82%;
+      aspect-ratio: 1;
+      border-radius: 48% 48% 42% 42%;
+      background:
+        radial-gradient(circle at 50% 44%, #f4ede4 0 46%, #e5d8c9 68%, #cbb79f 100%),
+        linear-gradient(180deg, #1b1412 0 22%, transparent 22% 100%);
+      box-shadow: inset 0 -10px 28px rgba(0,0,0,0.16), 0 0 20px rgba(255,255,255,0.05);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .monster-head::before {
+      content: '';
+      position: absolute;
+      inset: -1% 2% auto;
+      height: 30%;
+      border-radius: 50% 50% 40% 40%;
+      background: linear-gradient(180deg, #0a0605, #14100f 72%, transparent 100%);
+      opacity: 0.98;
+      box-shadow: 0 0 18px rgba(0,0,0,0.7);
+    }
+
+    .monster-head::after {
+      content: '';
+      position: absolute;
+      top: 34%;
+      width: 17%;
+      aspect-ratio: 1;
+      border-radius: 50% 45% 50% 45%;
+      background:
+        radial-gradient(circle at 50% 50%, #050505 0 56%, #131313 100%),
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,0.18), transparent 35%);
+      box-shadow: 0 0 10px rgba(0,0,0,0.8);
+    }
+
+    .monster-head::after {
+      right: 24%;
+    }
+
+    .monster-eye-left {
+      position: absolute;
+      top: 34%;
+      left: 24%;
+      width: 17%;
+      aspect-ratio: 1;
+      border-radius: 50% 45% 50% 45%;
+      background:
+        radial-gradient(circle at 50% 50%, #050505 0 56%, #131313 100%),
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,0.18), transparent 35%);
+      box-shadow: 0 0 10px rgba(0,0,0,0.8);
+    }
+
+    .monster-eye-left::after {
+      content: '';
+      position: absolute;
+      left: -1px;
+      top: 26%;
+      width: 18%;
+      height: 24%;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      filter: blur(1px);
+    }
+
+    .monster-hair-shadow {
+      position: absolute;
+      left: 7%;
+      top: 20%;
+      width: 86%;
+      height: 16%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 50% 50%, rgba(0,0,0,0.24), transparent 68%);
+      opacity: 0.7;
+    }
+
+    .monster-neck {
+      width: 18%;
+      height: 8%;
+      background: linear-gradient(180deg, #e9d5c6, #cfb2a0);
+      margin-top: -7%;
+      box-shadow: inset 0 -4px 8px rgba(0,0,0,0.08);
+      z-index: 1;
+    }
+
+    .monster-face-line {
+      position: absolute;
+      left: 50%;
+      top: 55%;
+      width: 14%;
+      height: 2px;
+      background: rgba(25, 18, 18, 0.44);
+      transform: translateX(-50%);
+      box-shadow: 0 8px 0 rgba(25, 18, 18, 0.16);
+    }
+
+    .monster-body {
+      position: relative;
+      width: 100%;
+      flex: 1;
+      margin-top: -7%;
+      border-radius: 20px 20px 10px 10px;
+      background:
+        linear-gradient(180deg, #f9fafb 0%, #ece9e4 52%, #ddd7cf 100%),
+        radial-gradient(circle at 50% 0%, rgba(255,255,255,0.4), transparent 34%);
+      box-shadow: inset 0 -18px 30px rgba(0,0,0,0.1);
+    }
+
+    .monster-arm {
+      position: absolute;
+      right: -12%;
+      top: 39%;
+      width: 44%;
+      height: 7%;
+      background: linear-gradient(180deg, #f4f4f5, #d8d8da);
+      border-radius: 999px;
+      transform: rotate(2deg);
+      box-shadow: inset 0 -3px 8px rgba(0,0,0,0.06);
+    }
+
+    .monster-hand {
+      position: absolute;
+      right: 8%;
+      top: 34%;
+      width: 12%;
+      aspect-ratio: 1;
+      border-radius: 28% 28% 40% 40%;
+      background: radial-gradient(circle at 50% 30%, #f0d0c6, #dfb7a8 55%, #c6998b 100%);
+      box-shadow: 0 0 15px rgba(0,0,0,0.08);
+    }
+
+    .monster-sleeve {
+      position: absolute;
+      right: -9%;
+      top: 34.5%;
+      width: 38%;
+      height: 6.8%;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #fafafa 0%, #ebebed 100%);
+      box-shadow: inset 0 -4px 8px rgba(0,0,0,0.08);
+      transform: rotate(1deg);
+    }
+
+    .monster-dress-shadow {
+      position: absolute;
+      inset: 48% 2% 0 0;
+      background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.04) 12%, rgba(0,0,0,0.15) 100%);
+      pointer-events: none;
+    }
+
+    .monster-glow {
+      position: absolute;
+      right: 6%;
+      top: 18%;
+      width: 30%;
+      height: 52%;
+      background: radial-gradient(circle, rgba(255,255,255,0.12), transparent 62%);
+      filter: blur(12px);
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .door-crack {
+      position: absolute;
+      left: 49%;
+      top: 11%;
+      width: 1.6%;
+      height: 78%;
+      background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,0.8), rgba(0,0,0,0));
+      filter: blur(2px);
+      opacity: 0.8;
+    }
+
+    .entity-caption {
+      position: absolute;
+      bottom: 7%;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 0.55rem 0.8rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.88);
+      background: rgba(0,0,0,0.56);
+      border: 1px solid rgba(255, 205, 130, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    #video-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @keyframes riseCard {
+      from { opacity: 0; transform: translateY(16px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      60% { transform: translateX(160%); }
+      100% { transform: translateX(160%); }
+    }
+
+    @keyframes barPulse {
+      0%, 100% { transform: scale(0.45); opacity: 0.35; }
+      50% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes driftFog {
+      0% { transform: translate3d(-1.2%, -1%, 0) scale(1.01); }
+      100% { transform: translate3d(1.6%, 1.1%, 0) scale(1.04); }
+    }
+
+    @keyframes humFlicker {
+      0%, 92%, 100% { opacity: 0.25; filter: blur(0.2px); }
+      94% { opacity: 0.72; filter: blur(0.4px); }
+      96% { opacity: 0.2; }
+    }
+
+    @keyframes strobe-anim {
+      0% { background: #000; }
+      50% { background: #111; }
+      100% { background: #000; }
+    }
+
+    @keyframes tremor {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-3px, -2px) scale(1.01); }
+      100% { transform: translate(2px, 3px) scale(1.01); }
+    }
+
+    @keyframes staticShift {
+      0% { transform: translate3d(0, 0, 0); }
+      50% { transform: translate3d(-0.6%, 0.4%, 0); }
+      100% { transform: translate3d(0.3%, -0.5%, 0); }
+    }
+
+    @keyframes veilDrift {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(6px); }
+    }
+
+    @keyframes pulseDark {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.01); }
+    }
+
+    @keyframes glitchDrift {
+      0%, 100% { clip-path: inset(0 0 86% 0); }
+      20% { clip-path: inset(18% 0 58% 0); }
+      40% { clip-path: inset(52% 0 18% 0); }
+      60% { clip-path: inset(10% 0 72% 0); }
+      80% { clip-path: inset(72% 0 4% 0); }
+    }
+
+    .screen-shake {
+      animation: screen-shake 160ms linear 1;
+    }
+
+    @keyframes screen-shake {
+      0% { transform: translate(0, 0); }
+      20% { transform: translate(3px, -2px); }
+      40% { transform: translate(-4px, 3px); }
+      60% { transform: translate(4px, 1px); }
+      80% { transform: translate(-2px, -3px); }
+      100% { transform: translate(0, 0); }
+    }
+
+    .glitch-flash {
+      animation: glitchFlash 110ms ease-out 1;
+    }
+
+    @keyframes glitchFlash {
+      0% { filter: none; }
+      50% { filter: invert(1) contrast(2.3) saturate(0.2); }
+      100% { filter: none; }
+    }
+
+    .terminal-open {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    @media (max-width: 720px) {
+      .hud {
+        top: 0.85rem;
+        left: 0.85rem;
+        right: 0.85rem;
+        font-size: 0.62rem;
+      }
+
+      .status-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .query-row {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .prompt-label {
+        display: none;
+      }
+
+      .monster-shell {
+        width: 100vw;
+        height: 100vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <video id="video-hidden" autoplay muted playsinline></video>
+  <div id="custom-cursor"></div>
+  <div id="flashlight"></div>
+  <div id="heartbeat-vignette"></div>
+  <div class="scanlines"></div>
+  <div class="static-noise"></div>
+  <div class="grain-vignette"></div>
+
+  <div id="boot-screen">
+    <div class="boot-card">
+      <div class="boot-inner">
+        <div class="eyebrow glitch-line" data-text="RADIATION RECOVERY / BIOMETRIC LOCK">RADIATION RECOVERY / BIOMETRIC LOCK</div>
+        <div class="title">TERMINAL 01</div>
+        <div class="subtitle">
+          The cooling hall is still breathing. The registry is missing names. The camera can see what the room refuses to hold, and the microphone will know when you flinch.
+          Sync the vault before the entity gets close enough to recognize you.
+        </div>
+        <div class="boot-meta">
+          <div class="chip">CAMERA: REQUIRED</div>
+          <div class="chip">MIC: REQUIRED</div>
+          <div class="chip">DOSIMETER: PRESENT</div>
+          <div class="chip">ENTITY: PROBABLE</div>
+        </div>
+        <div style="margin-top: 1.7rem; display:flex; gap:0.85rem; justify-content:center; flex-wrap:wrap;">
+          <button class="btn-ui" onclick="initVault()">ENGAGE SYNC</button>
+          <button class="btn-ui alt" onclick="document.querySelector('#boot-screen .subtitle').innerHTML='The facility stores voices in the walls and faces in the steam. If the sensors work, they will make the hallway worse.'">READ BRIEFING</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="transition-overlay">
+    <div class="transition-card">
+      <div class="transition-inner">
+        <div id="transition-number" class="chapter-number">CHAPTER 01</div>
+        <div id="transition-title" class="chapter-title">INIT</div>
+        <div id="transition-copy" class="chapter-copy"></div>
+        <div class="transition-bars" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="viewport">
+    <div class="facility-layer">
+      <div class="ceiling-light"></div>
+      <div class="doorframe"></div>
+      <div class="floor"></div>
+      <div class="warning-stripe"></div>
+      <div class="fog-bank"></div>
+      <div class="radiation-halo"></div>
+    </div>
+
+    <div class="hud">
+      <div class="hud-left">
+        <div>REC: VAULT_LOG_96</div>
+        <div id="mic-label">AUDIO: STANDBY</div>
+        <div id="bio-label">BIO: STANDBY</div>
+        <div class="meter-strip"><span id="sync-meter"></span></div>
+      </div>
+      <div class="hud-right">
+        <div>TS: <span id="ts-display">00:00</span></div>
+        <div>BPM: <span id="bpm-display">--</span></div>
+        <div>FRAG: <span id="ch-num">01</span>/20</div>
+        <div>RAD: <span id="rad-display">--</span></div>
+      </div>
+    </div>
+
+    <div id="terminal-wrap">
+      <div class="terminal-header">
+        <span>TERMINAL_SYNC_V5.4</span>
+        <span id="sid">SID: NULL</span>
+        <span id="camera-status">CAM: OFFLINE</span>
+      </div>
+
+      <div class="objective-module">
+        <div id="challenge-text"></div>
+      </div>
+
+      <div class="query-console">
+        <div class="query-row">
+          <div class="prompt-label">sql&gt;</div>
+          <input id="query-input" class="query-input" type="text" autocomplete="off" spellcheck="false" placeholder="Type the query, then press Enter..." />
+        </div>
+        <div class="micro-suggestions">
+          <button class="mini-chip" data-fill="SELECT * FROM ">SELECT *</button>
+          <button class="mini-chip" data-fill="WHERE ">WHERE</button>
+          <button class="mini-chip" data-fill="ORDER BY ">ORDER BY</button>
+          <button class="mini-chip" data-fill="GROUP BY ">GROUP BY</button>
+          <button class="mini-chip" data-fill="HAVING ">HAVING</button>
+          <button class="mini-chip" data-fill="IS NULL">IS NULL</button>
+          <button class="mini-chip" id="hint-btn">HINT</button>
+        </div>
+      </div>
+
+      <div class="status-row">
+        <div class="status-tile">
+          <span>Noise</span>
+          <strong id="noise-readout">0%</strong>
+          <div class="status-bar"><i id="noise-bar"></i></div>
+        </div>
+        <div class="status-tile">
+          <span>Focus</span>
+          <strong id="focus-readout">100%</strong>
+          <div class="status-bar"><i id="focus-bar"></i></div>
+        </div>
+        <div class="status-tile">
+          <span>Radiation</span>
+          <strong id="radiation-readout">0%</strong>
+          <div class="status-bar"><i id="radiation-bar"></i></div>
+        </div>
+        <div class="status-tile">
+          <span>Heartbeat</span>
+          <strong id="pulse-readout">--</strong>
+          <div class="status-bar"><i id="pulse-bar"></i></div>
+        </div>
+      </div>
+
+      <div id="feedback" class="feedback"></div>
+    </div>
+  </div>
+
+  <div id="narrative-overlay" class="narrative-transition">
+    <div class="narrative-card">
+      <div class="narrative-inner">
+        <div id="narrative-eyebrow" class="eyebrow glitch-line" data-text="SCENE">SCENE</div>
+        <div id="narrative-title" class="title" style="font-size: clamp(2.1rem, 5vw, 4.5rem);">WAKE</div>
+        <div id="typewriter-box" class="subtitle" style="white-space: pre-wrap; max-width: 52rem; margin: 1rem auto 0;"></div>
+        <div style="margin-top: 1.5rem; display:flex; justify-content:center; gap:0.85rem; flex-wrap:wrap;">
+          <button id="proceed-btn" class="btn-ui" style="display:none" onclick="openTerminal()">ACKNOWLEDGE LOG</button>
+          <button class="btn-ui alt" onclick="skipNarrative()">FORCE OPEN</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="jumpscare-overlay">
+    <div class="monster-stage">
+      <div class="monster-door"></div>
+      <div class="monster-shell">
+        <img id="monster" class="monster-figure" src="image_fc8738.png" alt="Entity" />
+        <div class="monster-fallback" id="monster-fallback" aria-hidden="true">
+          <div class="monster-glow"></div>
+          <div class="monster-door-panel"></div>
+          <div class="monster-person">
+            <div class="monster-head">
+              <div class="monster-hair-shadow"></div>
+              <div class="monster-eye-left"></div>
+              <div class="monster-face-line"></div>
+            </div>
+            <div class="monster-neck"></div>
+            <div class="monster-body"></div>
+            <div class="monster-dress-shadow"></div>
+            <div class="monster-arm"></div>
+            <div class="monster-sleeve"></div>
+            <div class="monster-hand"></div>
+          </div>
+          <div class="door-crack"></div>
+        </div>
+        <div class="entity-caption" id="entity-caption">ENTITY DETECTED</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const levels = [
+      { chapter: '01', title: 'ARRIVAL', log: 'The hallway is warm, but the tiles are cold. The registry room is lit like a dead hospital. Sync the vault before the camera decides you are part of the architecture.', quest: "Select all columns from 'registry'.", answers: ['SELECT * FROM registry'], hint: 'SELECT * FROM [table]', accent: '#d8b86d', fog: 'rgba(255, 208, 120, 0.08)', bpm: 60, noiseThreat: 0.16, faceThreat: 0.25, caption: 'A figure waits behind the door.' },
+      { chapter: '02', title: 'DUPLICATION', log: 'The map has begun making copies of itself. Every mirrored panel is one step more wrong than the last. Isolate the unique room IDs before the duplicates start moving together.', quest: "Retrieve unique 'room_id' from 'map_data'.", answers: ['SELECT DISTINCT room_id FROM map_data'], hint: 'SELECT DISTINCT [col] FROM [table]', accent: '#cdbf7a', fog: 'rgba(225, 210, 140, 0.08)', bpm: 62, noiseThreat: 0.18, faceThreat: 0.28, caption: 'Static lingers in the corners.' },
+      { chapter: '03', title: 'IDENTIFICATION', log: 'A name appears on the glass. It is not yours, but the room seems to know it anyway. Pull the record for EDMUND before the archive finishes remembering him.', quest: "Select all from 'souls' where name is 'EDMUND'.", answers: ["SELECT * FROM souls WHERE name = 'EDMUND'"], hint: "WHERE [col] = 'value'", accent: '#ccb27f', fog: 'rgba(255, 190, 120, 0.07)', bpm: 63, noiseThreat: 0.2, faceThreat: 0.28, caption: 'Do not look directly into the dark frame.' },
+      { chapter: '04', title: 'CLEARANCE', log: 'The badge reader still hums under the plaster. Low clearance is a contagion. Remove every entry that should not have crossed the threshold.', quest: 'Select all users where clearance is NOT 0.', answers: ['SELECT * FROM users WHERE level != 0', 'SELECT * FROM users WHERE level <> 0'], hint: '!= 0 or <> 0', accent: '#b7c79a', fog: 'rgba(180, 220, 170, 0.06)', bpm: 66, noiseThreat: 0.22, faceThreat: 0.3, caption: 'The corridor listens to your breathing.' },
+      { chapter: '05', title: 'ACTIVE NODE', log: 'The power room lights up in red intervals. A node in sector 4 just woke up. Find it before the reactor feed starts broadcasting the wrong heartbeat.', quest: "Select all from 'nodes' where sector is 4 AND status is 'ACTIVE'.", answers: ["SELECT * FROM nodes WHERE sector = 4 AND status = 'ACTIVE'"], hint: 'WHERE [a] AND [b]', accent: '#ffbe70', fog: 'rgba(255, 170, 80, 0.09)', bpm: 68, noiseThreat: 0.24, faceThreat: 0.32, caption: 'The lights blink in a pattern you almost understand.' },
+      { chapter: '06', title: 'CONTAINMENT', log: 'Something hit the far wall. The sound came from inside the ducting, then from behind you, then from nowhere at all. Check the core block IDs and keep the seal intact.', quest: 'Select all from buffer where id is between 100 and 500.', answers: ['SELECT * FROM buffer WHERE id BETWEEN 100 AND 500'], hint: 'BETWEEN x AND y', accent: '#d7a55d', fog: 'rgba(255, 210, 140, 0.08)', bpm: 70, noiseThreat: 0.26, faceThreat: 0.34, caption: 'A handprint forms on the glass and fades.' },
+      { chapter: '07', title: 'SPLIT PATH', log: 'The maps are no longer agreeing with each other. Search the sectors where the survivors clustered before the evacuation cameras cut out.', quest: 'Select all from entities where sector_id is in 1, 5, or 9.', answers: ['SELECT * FROM entities WHERE sector_id IN (1, 5, 9)'], hint: 'IN (1, 5, 9)', accent: '#c8d0a7', fog: 'rgba(180, 255, 180, 0.05)', bpm: 72, noiseThreat: 0.28, faceThreat: 0.34, caption: 'The door is open one inch further than before.' },
+      { chapter: '08', title: 'PATTERN RECOGNITION', log: 'The faces in the corridor have started to line up with the old warning posters. Find the names that begin with X before the system decides they are all the same thing.', quest: "Select name from entities where name starts with X.", answers: ["SELECT name FROM entities WHERE name LIKE 'X%'"] , hint: "LIKE 'X%'", accent: '#9fd3b0', fog: 'rgba(120, 255, 180, 0.06)', bpm: 74, noiseThreat: 0.29, faceThreat: 0.36, caption: 'The entity is closer every time the screen flashes.' },
+      { chapter: '09', title: 'NULL', log: 'Some bodies never reached the evacuation bus. Some rows were left blank on purpose. Find the signatures with no sector assignment and do not ask why the list keeps growing.', quest: 'Select all from entities where sector_id is null.', answers: ['SELECT * FROM entities WHERE sector_id IS NULL'], hint: 'IS NULL', accent: '#a3d2c4', fog: 'rgba(140, 240, 220, 0.05)', bpm: 76, noiseThreat: 0.31, faceThreat: 0.37, caption: 'Your reflection is late by half a second.' },
+      { chapter: '10', title: 'DESCENT', log: 'The stairs lead downward but the ceiling gets lower at the same time. Sort the threats by hazard level. The worst thing in the room is probably already at the top.', quest: 'Select all from threats ordered by level descending.', answers: ['SELECT * FROM threats ORDER BY level DESC'], hint: 'ORDER BY [col] DESC', accent: '#80d4ff', fog: 'rgba(100, 180, 255, 0.07)', bpm: 79, noiseThreat: 0.34, faceThreat: 0.4, caption: 'The hum in the walls has become a voice.' },
+      { chapter: '11', title: 'RADIATION LOG', log: 'The dosimeter is singing. Anyone still moving should appear in the first five records, unless the archive starts hiding them from you.', quest: 'Select all from logs limit 5.', answers: ['SELECT * FROM logs LIMIT 5'], hint: 'LIMIT 5', accent: '#8bc8ff', fog: 'rgba(120, 190, 255, 0.06)', bpm: 82, noiseThreat: 0.36, faceThreat: 0.42, caption: 'The camera keeps catching the same shadow in a different place.' },
+      { chapter: '12', title: 'PEAK HEAT', log: 'The reactor shell is breathing through the vents. Find the maximum radiation level before the glow spills into the corridor.', quest: "Find the maximum 'rad_level' in 'sensors'.", answers: ['SELECT MAX(rad_level) FROM sensors'], hint: 'MAX([col])', accent: '#ffe08a', fog: 'rgba(255, 210, 90, 0.08)', bpm: 85, noiseThreat: 0.38, faceThreat: 0.44, caption: 'Something humid moves behind the door.' },
+      { chapter: '13', title: 'FREEZE', log: 'The cold storage is colder than the weather outside the building. The minimum temperature matters because the warmer readings are no longer human.', quest: "Find the minimum 'temp' in 'sensors'.", answers: ['SELECT MIN(temp) FROM sensors'], hint: 'MIN([col])', accent: '#9ee0ff', fog: 'rgba(120, 220, 255, 0.06)', bpm: 88, noiseThreat: 0.39, faceThreat: 0.46, caption: 'The entity pauses when you stop moving.' },
+      { chapter: '14', title: 'TALLY', log: 'The souls section has started counting itself. The total is wrong. It has been wrong since before you arrived.', quest: 'Count all records in souls.', answers: ['SELECT COUNT(*) FROM souls'], hint: 'COUNT(*)', accent: '#c9dfb6', fog: 'rgba(180, 240, 180, 0.06)', bpm: 90, noiseThreat: 0.4, faceThreat: 0.48, caption: 'The hallway narrows every time you blink.' },
+      { chapter: '15', title: 'MASS', log: 'Containment cells should never weigh this much. Sum the mass before the floor gives in and lets the lower levels listen.', quest: "Sum the 'mass' column from 'cells'.", answers: ['SELECT SUM(mass) FROM cells'], hint: 'SUM([col])', accent: '#ffca73', fog: 'rgba(255, 210, 120, 0.08)', bpm: 93, noiseThreat: 0.42, faceThreat: 0.5, caption: 'There is someone standing just outside the frame.' },
+      { chapter: '16', title: 'STABILITY', log: 'The network loop keeps drifting toward a whisper. Average stability is all that separates the corridor from a mouth.', quest: "Find average 'stability' from 'system'.", answers: ['SELECT AVG(stability) FROM system'], hint: 'AVG([col])', accent: '#abd8ff', fog: 'rgba(160, 210, 255, 0.07)', bpm: 96, noiseThreat: 0.43, faceThreat: 0.52, caption: 'The noise in your headphones feels intentional.' },
+      { chapter: '17', title: 'GROUPING', log: 'The threat logs are clustering like insects around heat. Group them by sector and see which area has become the nest.', quest: 'Select sector_id and count, group by sector_id.', answers: ['SELECT sector_id, COUNT(*) FROM threats GROUP BY sector_id'], hint: 'GROUP BY', accent: '#ffcb77', fog: 'rgba(255, 210, 100, 0.08)', bpm: 100, noiseThreat: 0.45, faceThreat: 0.53, caption: 'The figure behind the door raises its hand.' },
+      { chapter: '18', title: 'HAVING', log: 'The reactor no longer wants small errors. Sectors with too many threats have already been eaten by the map. Filter the ones that matter.', quest: 'Group by sector and filter groups with count > 10.', answers: ['SELECT sector_id FROM threats GROUP BY sector_id HAVING COUNT(*) > 10'], hint: 'HAVING', accent: '#ff9561', fog: 'rgba(255, 160, 100, 0.08)', bpm: 104, noiseThreat: 0.48, faceThreat: 0.56, caption: 'The microphone hears a breath that is not yours.' },
+      { chapter: '19', title: 'OVERRIDE', log: 'The vents are locked in a dead spin. Fan unit 1 has to rotate or the room will fill with the smell of hot wiring and old paper.', quest: "Update 'ventilation' set status to 'ROTATING' where id is 1.", answers: ["UPDATE ventilation SET status = 'ROTATING' WHERE id = 1"], hint: 'UPDATE ... SET ... WHERE ...', accent: '#ff6b6b', fog: 'rgba(255, 120, 120, 0.07)', bpm: 110, noiseThreat: 0.52, faceThreat: 0.6, caption: 'The entity has stopped pretending to be still.' },
+      { chapter: '20', title: 'PURGE', log: 'Final sync. The emergency lights have turned the hallway into a throat. Remove the unauthorized record before it learns the shape of your name.', quest: "Delete record where name is 'UNAUTHORIZED_ENTITY'.", answers: ["DELETE FROM threats WHERE name = 'UNAUTHORIZED_ENTITY'"], hint: 'DELETE FROM ... WHERE ...', accent: '#ff4e4e', fog: 'rgba(255, 70, 70, 0.08)', bpm: 115, noiseThreat: 0.58, faceThreat: 0.65, caption: 'Do not let it reach the glass.' }
+    ];
+
+    const state = {
+      currentLevel: 0,
+      mistakes: 0,
+      currentBPM: 60,
+      gameActive: false,
+      audioCtx: null,
+      analyser: null,
+      dataArray: null,
+      micStream: null,
+      video: null,
+      audioReady: false,
+      cameraReady: false,
+      faceReady: false,
+      noiseFloor: 0.02,
+      noiseSmoothed: 0.02,
+      lastFaceScan: 0,
+      noFaceTicks: 0,
+      scheduleId: null,
+      pulseTimeout: null,
+      breathTimeout: null,
+      ambienceNodes: [],
+      hintShown: false,
+      transitionLock: false,
+      startedAt: Date.now()
+    };
+
+    const dom = {
+      boot: document.getElementById('boot-screen'),
+      transition: document.getElementById('transition-overlay'),
+      transitionNumber: document.getElementById('transition-number'),
+      transitionTitle: document.getElementById('transition-title'),
+      transitionCopy: document.getElementById('transition-copy'),
+      narrative: document.getElementById('narrative-overlay'),
+      narrativeEyebrow: document.getElementById('narrative-eyebrow'),
+      narrativeTitle: document.getElementById('narrative-title'),
+      narrativeBox: document.getElementById('typewriter-box'),
+      proceedBtn: document.getElementById('proceed-btn'),
+      terminal: document.getElementById('terminal-wrap'),
+      feedback: document.getElementById('feedback'),
+      challenge: document.getElementById('challenge-text'),
+      queryInput: document.getElementById('query-input'),
+      sid: document.getElementById('sid'),
+      chNum: document.getElementById('ch-num'),
+      bpm: document.getElementById('bpm-display'),
+      ts: document.getElementById('ts-display'),
+      micLabel: document.getElementById('mic-label'),
+      bioLabel: document.getElementById('bio-label'),
+      cameraStatus: document.getElementById('camera-status'),
+      syncMeter: document.getElementById('sync-meter'),
+      noiseReadout: document.getElementById('noise-readout'),
+      noiseBar: document.getElementById('noise-bar'),
+      focusReadout: document.getElementById('focus-readout'),
+      focusBar: document.getElementById('focus-bar'),
+      radiationReadout: document.getElementById('radiation-readout'),
+      radiationBar: document.getElementById('radiation-bar'),
+      pulseReadout: document.getElementById('pulse-readout'),
+      pulseBar: document.getElementById('pulse-bar'),
+      monsterOverlay: document.getElementById('jumpscare-overlay'),
+      monster: document.getElementById('monster'),
+      monsterFallback: document.getElementById('monster-fallback'),
+      entityCaption: document.getElementById('entity-caption')
+    };
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function normalizeSQL(value) {
+      return value
+        .replace(/;+/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+    }
+
+    function currentLevelData() {
+      return levels[state.currentLevel];
+    }
+
+    function setSceneTheme(scene) {
+      document.documentElement.style.setProperty('--scene-accent', scene.accent);
+      document.documentElement.style.setProperty('--scene-fog', scene.fog);
+      document.documentElement.style.setProperty('--scene-glow', scene.fog.replace('0.08', '0.15'));
+      dom.bpm.textContent = String(Math.floor(state.currentBPM));
+      dom.chNum.textContent = String(state.currentLevel + 1).padStart(2, '0');
+      dom.radiationReadout.textContent = `${Math.floor(getRadiation() * 100)}%`;
+      dom.focusReadout.textContent = `${Math.floor(getFocus() * 100)}%`;
+      dom.noiseReadout.textContent = `${Math.floor(getNoisePercent() * 100)}%`;
+      dom.pulseReadout.textContent = `${Math.floor(state.currentBPM)} BPM`;
+      updateBars();
+    }
+
+    function getRadiation() {
+      const scene = currentLevelData() || levels[levels.length - 1];
+      const base = 0.1 + (state.currentLevel / 25);
+      return clamp(base + state.mistakes * 0.035 + (state.currentBPM - 60) / 180, 0.05, 1);
+    }
+
+    function getFocus() {
+      return clamp(1 - state.noiseSmoothed * 1.5 - state.mistakes * 0.05 - (state.noFaceTicks > 0 ? 0.08 : 0), 0.05, 1);
+    }
+
+    function getNoisePercent() {
+      return clamp((state.noiseSmoothed - state.noiseFloor) * 5, 0, 1);
+    }
+
+    function updateBars() {
+      dom.noiseBar.style.transform = `scaleX(${clamp(getNoisePercent(), 0.04, 1)})`;
+      dom.focusBar.style.transform = `scaleX(${clamp(getFocus(), 0.04, 1)})`;
+      dom.radiationBar.style.transform = `scaleX(${clamp(getRadiation(), 0.04, 1)})`;
+      dom.pulseBar.style.transform = `scaleX(${clamp((state.currentBPM - 55) / 70, 0.08, 1)})`;
+      dom.syncMeter.style.transform = `scaleX(${clamp((state.currentLevel + 1) / levels.length, 0.05, 1)})`;
+    }
+
+    async function initVault() {
+      dom.boot.querySelector('.btn-ui').disabled = true;
+      try {
+        await setupAudio();
+      } catch (error) {
+        state.audioReady = false;
+        dom.micLabel.textContent = 'AUDIO: OFFLINE';
+      }
+
+      try {
+        await setupCamera();
+        state.cameraReady = true;
+        dom.cameraStatus.textContent = 'CAM: LIVE';
+      } catch (error) {
+        state.cameraReady = false;
+        dom.cameraStatus.textContent = 'CAM: OFFLINE';
+      }
+
+      try {
+        const modelPath = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights';
+        await faceapi.nets.tinyFaceDetector.loadFromUri(modelPath);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(modelPath);
+        state.faceReady = true;
+        dom.bioLabel.textContent = 'BIO: TRACKING';
+      } catch (error) {
+        state.faceReady = false;
+        dom.bioLabel.textContent = 'BIO: MANUAL';
+      }
+
+      await calibrateMicrophone();
+      document.body.classList.add('ready');
+      dom.sid.textContent = 'SID: ' + Math.random().toString(36).slice(2, 8).toUpperCase();
+      dom.boot.style.display = 'none';
+      showLevelTransition(true);
+      startHUDTimer();
+      startSensorLoops();
+      startAudioLoops();
+    }
+
+    async function setupAudio() {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) throw new Error('AudioContext unavailable');
+      state.audioCtx = new AudioContextClass();
+      if (state.audioCtx.state === 'suspended') {
+        await state.audioCtx.resume();
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }, video: false });
+      state.micStream = stream;
+      state.analyser = state.audioCtx.createAnalyser();
+      state.analyser.fftSize = 1024;
+      state.analyser.smoothingTimeConstant = 0.85;
+      state.dataArray = new Uint8Array(state.analyser.fftSize);
+      const micSource = state.audioCtx.createMediaStreamSource(stream);
+      micSource.connect(state.analyser);
+      state.audioReady = true;
+      dom.micLabel.textContent = 'AUDIO: SYNCED';
+    }
+
+    async function setupCamera() {
+      state.video = document.getElementById('video-hidden');
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 960 }, height: { ideal: 720 } }, audio: false });
+      state.video.srcObject = stream;
+      await new Promise((resolve) => {
+        state.video.onloadedmetadata = () => resolve();
+      });
+      await state.video.play();
+    }
+
+    async function calibrateMicrophone() {
+      if (!state.audioReady || !state.analyser) {
+        state.noiseFloor = 0.02;
+        return;
+      }
+      const samples = [];
+      for (let i = 0; i < 12; i++) {
+        const level = readMicRms();
+        if (Number.isFinite(level) && level > 0) samples.push(level);
+        await sleep(55);
+      }
+      if (samples.length) {
+        const avg = samples.reduce((sum, value) => sum + value, 0) / samples.length;
+        state.noiseFloor = clamp(avg * 1.8, 0.008, 0.08);
+      }
+      state.noiseSmoothed = state.noiseFloor;
+    }
+
+    function readMicRms() {
+      if (!state.analyser || !state.dataArray) return 0;
+      state.analyser.getByteTimeDomainData(state.dataArray);
+      let sum = 0;
+      for (let i = 0; i < state.dataArray.length; i++) {
+        const sample = (state.dataArray[i] - 128) / 128;
+        sum += sample * sample;
+      }
+      return Math.sqrt(sum / state.dataArray.length);
+    }
+
+    function startHUDTimer() {
+      const tick = () => {
+        const diff = Date.now() - state.startedAt;
+        const minutes = Math.floor(diff / 60000).toString().padStart(2, '0');
+        const seconds = Math.floor(diff / 1000 % 60).toString().padStart(2, '0');
+        dom.ts.textContent = `${minutes}:${seconds}`;
+        updateBars();
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+
+    function startSensorLoops() {
+      const video = state.video;
+      const detectOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
+      const loop = async () => {
+        if (state.audioReady) {
+          const micLevel = readMicRms();
+          state.noiseSmoothed = state.noiseSmoothed * 0.9 + micLevel * 0.1;
+          dom.noiseReadout.textContent = `${Math.floor(getNoisePercent() * 100)}%`;
+          if (state.noiseSmoothed > state.noiseFloor + 0.08) {
+            triggerGlitch(1);
+            if (state.noiseSmoothed > state.noiseFloor + 0.18) {
+              triggerEntityPeek('voice');
+            }
+          }
+        }
+
+        if (state.cameraReady && state.faceReady && video && state.gameActive) {
+          const now = performance.now();
+          if (now - state.lastFaceScan > 420) {
+            state.lastFaceScan = now;
+            try {
+              const detection = await faceapi.detectSingleFace(video, detectOptions).withFaceLandmarks();
+              if (!detection) {
+                state.noFaceTicks += 1;
+                dom.bioLabel.textContent = `BIO: LOST ${state.noFaceTicks}`;
+                if (state.noFaceTicks >= 4) {
+                  triggerEntityPeek('absence');
+                }
+                if (state.noFaceTicks >= 7) {
+                  triggerPurge('ABSENCE');
+                }
+              } else {
+                state.noFaceTicks = 0;
+                dom.bioLabel.textContent = 'BIO: LOCKED';
+                const landmarks = detection.landmarks.positions;
+                const mouth = Math.max(1, landmarks[66].y - landmarks[62].y);
+                const faceHeight = Math.max(1, landmarks[8].y - landmarks[27].y);
+                const ratio = mouth / faceHeight;
+                if (ratio > 0.34) {
+                  triggerGlitch(1.25);
+                  if (ratio > 0.48) {
+                    triggerPurge('FATIGUE');
+                  }
+                }
+              }
+            } catch (error) {
+              dom.bioLabel.textContent = 'BIO: STALL';
+            }
+          }
+        }
+
+        state.scheduleId = requestAnimationFrame(loop);
+      };
+      state.scheduleId = requestAnimationFrame(loop);
+    }
+
+    function startAudioLoops() {
+      scheduleHeartbeat();
+      scheduleBreathingBed();
+      scheduleFacilityHum();
+    }
+
+    function createNoiseBuffer(duration = 2) {
+      const buffer = state.audioCtx.createBuffer(1, state.audioCtx.sampleRate * duration, state.audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      return buffer;
+    }
+
+    function scheduleHeartbeat() {
+      if (!state.audioCtx) return;
+      if (!state.gameActive) {
+        state.pulseTimeout = setTimeout(scheduleHeartbeat, 750);
+        return;
+      }
+      const bpm = state.currentBPM;
+      const interval = 60000 / bpm;
+      const now = state.audioCtx.currentTime;
+      const body = state.audioCtx.createOscillator();
+      const bodyGain = state.audioCtx.createGain();
+      const bodyFilter = state.audioCtx.createBiquadFilter();
+      body.type = 'sine';
+      body.frequency.setValueAtTime(52, now);
+      body.frequency.exponentialRampToValueAtTime(36, now + 0.11);
+      bodyFilter.type = 'lowpass';
+      bodyFilter.frequency.setValueAtTime(180, now);
+      bodyGain.gain.setValueAtTime(0.0001, now);
+      bodyGain.gain.exponentialRampToValueAtTime(0.38, now + 0.018);
+      bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+      body.connect(bodyFilter);
+      bodyFilter.connect(bodyGain);
+      bodyGain.connect(state.audioCtx.destination);
+      body.start(now);
+      body.stop(now + 0.18);
+
+      const clickNoise = state.audioCtx.createBufferSource();
+      clickNoise.buffer = createNoiseBuffer(0.05);
+      const clickFilter = state.audioCtx.createBiquadFilter();
+      clickFilter.type = 'bandpass';
+      clickFilter.frequency.setValueAtTime(210, now);
+      clickFilter.Q.value = 4.5;
+      const clickGain = state.audioCtx.createGain();
+      clickGain.gain.setValueAtTime(0.0001, now);
+      clickGain.gain.exponentialRampToValueAtTime(0.16, now + 0.005);
+      clickGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+      clickNoise.connect(clickFilter);
+      clickFilter.connect(clickGain);
+      clickGain.connect(state.audioCtx.destination);
+      clickNoise.start(now);
+      clickNoise.stop(now + 0.06);
+
+      dom.bpm.textContent = String(Math.floor(state.currentBPM));
+      dom.pulseReadout.textContent = `${Math.floor(state.currentBPM)} BPM`;
+      dom.heartbeatShadow = document.getElementById('heartbeat-vignette');
+      dom.heartbeatShadow.style.boxShadow = `inset 0 0 ${150 + state.currentBPM}px rgba(255, 95, 95, 0.18)`;
+      setTimeout(() => {
+        dom.heartbeatShadow.style.boxShadow = 'inset 0 0 180px rgba(0,0,0,0.96)';
+      }, 120);
+
+      state.pulseTimeout = setTimeout(scheduleHeartbeat, interval);
+      updateBars();
+    }
+
+    function scheduleBreathingBed() {
+      if (!state.audioCtx) return;
+      if (!state.gameActive) {
+        state.breathTimeout = setTimeout(scheduleBreathingBed, 900);
+        return;
+      }
+
+      const ctx = state.audioCtx;
+      const noise = ctx.createBufferSource();
+      noise.buffer = createNoiseBuffer(4);
+      noise.loop = true;
+
+      const lowpass = ctx.createBiquadFilter();
+      lowpass.type = 'lowpass';
+      lowpass.frequency.value = 180;
+      lowpass.Q.value = 0.6;
+
+      const bandpass = ctx.createBiquadFilter();
+      bandpass.type = 'bandpass';
+      bandpass.frequency.value = 96;
+      bandpass.Q.value = 0.85;
+
+      const gain = ctx.createGain();
+      gain.gain.value = 0.0;
+
+      const shimmer = ctx.createOscillator();
+      shimmer.type = 'sine';
+      shimmer.frequency.value = 0.06;
+      const shimmerGain = ctx.createGain();
+      shimmerGain.gain.value = 90;
+
+      noise.connect(lowpass);
+      lowpass.connect(bandpass);
+      bandpass.connect(gain);
+      gain.connect(ctx.destination);
+
+      shimmer.connect(shimmerGain);
+      shimmerGain.connect(lowpass.frequency);
+      shimmer.start();
+
+      noise.start();
+      state.ambienceNodes.push(noise, lowpass, bandpass, gain, shimmer, shimmerGain);
+
+      const breathe = () => {
+        if (!state.gameActive) {
+          try { noise.stop(); shimmer.stop(); } catch (error) {}
+          return;
+        }
+        const now = ctx.currentTime;
+        const inhale = 2200 - Math.min(1000, state.currentBPM * 4);
+        gain.gain.cancelScheduledValues(now);
+        lowpass.frequency.cancelScheduledValues(now);
+        gain.gain.setTargetAtTime(0.018 + state.currentBPM / 12000, now, 0.12);
+        lowpass.frequency.setTargetAtTime(330 + state.currentBPM * 1.25, now, 0.24);
+        setTimeout(() => {
+          const exhaleNow = ctx.currentTime;
+          gain.gain.setTargetAtTime(0.005, exhaleNow, 0.24);
+          lowpass.frequency.setTargetAtTime(140, exhaleNow, 0.34);
+        }, inhale);
+        state.breathTimeout = setTimeout(breathe, inhale + 1200);
+      };
+      breathe();
+    }
+
+    function scheduleFacilityHum() {
+      if (!state.audioCtx) return;
+      if (!state.gameActive) {
+        setTimeout(scheduleFacilityHum, 1300);
+        return;
+      }
+
+      const ctx = state.audioCtx;
+      const noise = ctx.createBufferSource();
+      noise.buffer = createNoiseBuffer(3);
+      noise.loop = true;
+      const low = ctx.createBiquadFilter();
+      low.type = 'lowpass';
+      low.frequency.value = 120;
+      const rumble = ctx.createBiquadFilter();
+      rumble.type = 'bandpass';
+      rumble.frequency.value = 40;
+      rumble.Q.value = 0.45;
+      const gain = ctx.createGain();
+      gain.gain.value = 0.0;
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -28;
+      comp.ratio.value = 6;
+      noise.connect(low);
+      low.connect(rumble);
+      rumble.connect(gain);
+      gain.connect(comp);
+      comp.connect(ctx.destination);
+      noise.start();
+      gain.gain.setTargetAtTime(0.01, ctx.currentTime, 0.18);
+      state.ambienceNodes.push(noise, low, rumble, gain, comp);
+    }
+
+    function showLevelTransition(initial = false) {
+      const scene = currentLevelData();
+      if (!scene) {
+        winGame();
+        return;
+      }
+      state.transitionLock = true;
+      dom.terminal.style.display = 'none';
+      dom.transitionNumber.textContent = `CHAPTER ${scene.chapter}`;
+      dom.transitionTitle.textContent = scene.title;
+      dom.narrative.classList.add('active');
+      dom.transition.classList.add('active');
+      setSceneTheme(scene);
+      dom.chNum.textContent = scene.chapter;
+      dom.feedback.className = 'feedback';
+      dom.feedback.textContent = '';
+      dom.challenge.textContent = scene.quest;
+      dom.narrativeEyebrow.textContent = initial ? 'SYSTEM WAKE' : 'FIELD BRIEF';
+      dom.narrativeTitle.textContent = scene.title;
+      const writerTarget = initial ? scene.log : `${scene.log}\n\nThreat profile: ${scene.caption}`;
+      typewriter(writerTarget, dom.narrativeBox, () => {
+        dom.proceedBtn.style.display = 'inline-flex';
+        state.transitionLock = false;
+      });
+    }
+
+    function typewriter(text, target, done, speed = 16) {
+      target.textContent = '';
+      let index = 0;
+      const step = () => {
+        if (index >= text.length) {
+          if (done) done();
+          return;
+        }
+        target.textContent += text[index];
+        index += 1;
+        const char = text[index - 1];
+        const delay = char === '.' || char === ':' ? speed * 5 : char === '\n' ? speed * 2 : speed;
+        setTimeout(step, delay);
+      };
+      step();
+    }
+
+    function skipNarrative() {
+      dom.narrativeBox.textContent = `${currentLevelData().log}\n\nThreat profile: ${currentLevelData().caption}`;
+      dom.proceedBtn.style.display = 'inline-flex';
+      openTerminal();
+    }
+
+    function openTerminal() {
+      dom.transition.classList.remove('active');
+      dom.transition.style.display = 'none';
+      dom.narrative.classList.remove('active');
+      dom.terminal.style.display = 'block';
+      dom.terminal.classList.add('terminal-open');
+      dom.queryInput.value = '';
+      dom.queryInput.focus();
+      dom.proceedBtn.style.display = 'none';
+      dom.feedback.className = 'feedback';
+      dom.feedback.textContent = '';
+      dom.challenge.textContent = currentLevelData().quest;
+      dom.cameraStatus.textContent = state.cameraReady ? 'CAM: LIVE' : 'CAM: OFFLINE';
+      state.gameActive = true;
+      state.transitionLock = false;
+      setSceneTheme(currentLevelData());
+      updateBars();
+    }
+
+    function advanceLevel() {
+      state.currentLevel += 1;
+      state.currentBPM = Math.max(58, state.currentBPM - 4);
+      if (state.currentLevel >= levels.length) {
+        winGame();
+        return;
+      }
+      state.gameActive = false;
+      dom.terminal.classList.remove('terminal-open');
+      dom.terminal.style.opacity = '0';
+      setTimeout(() => {
+        dom.terminal.style.opacity = '1';
+        dom.terminal.style.display = 'none';
+        showLevelTransition();
+      }, 420);
+    }
+
+    function checkAnswer() {
+      if (state.transitionLock || !state.gameActive) return;
+      const scene = currentLevelData();
+      const input = normalizeSQL(dom.queryInput.value);
+      const match = scene.answers.some(answer => normalizeSQL(answer) === input);
+      if (match) {
+        dom.feedback.className = 'feedback good';
+        dom.feedback.innerHTML = 'SYNC ACCEPTED. The room shifts a little less wrong.';
+        state.currentBPM = Math.max(56, state.currentBPM - 5);
+        setTimeout(() => {
+          dom.terminal.style.display = 'none';
+          advanceLevel();
+        }, 820);
+      } else {
+        handleError();
+      }
+      updateBars();
+    }
+
+    function handleError() {
+      state.mistakes += 1;
+      state.currentBPM = Math.min(150, state.currentBPM + 16);
+      const scene = currentLevelData();
+      dom.feedback.className = 'feedback error';
+      dom.feedback.innerHTML = `ERROR. The facility rejects that phrase.<br><span style="color: rgba(255,255,255,0.36);">REC: ${scene.hint}</span>`;
+      shakeTerminal();
+      triggerGlitch(1.2);
+      if (state.mistakes >= 3 && state.currentBPM > 120) {
+        triggerEntityPeek('threshold');
+      }
+      if (state.mistakes >= 6 || state.currentBPM >= 140) {
+        triggerPurge('THRESHOLD');
+      }
+      updateBars();
+    }
+
+    function shakeTerminal() {
+      dom.terminal.classList.add('screen-shake');
+      setTimeout(() => dom.terminal.classList.remove('screen-shake'), 180);
+    }
+
+    function triggerGlitch(intensity = 1) {
+      const viewport = document.getElementById('viewport');
+      viewport.classList.add('glitch-flash');
+      viewport.style.filter = `invert(${clamp(intensity * 0.4, 0, 1)}) contrast(${1.2 + intensity}) saturate(0.75)`;
+      dom.flashTimeout = setTimeout(() => {
+        viewport.classList.remove('glitch-flash');
+        viewport.style.filter = 'saturate(0.92) contrast(1.05)';
+      }, 120);
+      if (Math.random() > 0.55) {
+        document.body.classList.add('screen-shake');
+        setTimeout(() => document.body.classList.remove('screen-shake'), 180);
+      }
+    }
+
+    function triggerEntityPeek(reason = 'presence') {
+      if (dom.monsterOverlay.style.display === 'flex') return;
+      dom.entityCaption.textContent = reason === 'voice' ? 'IT HEARD YOU' : reason === 'absence' ? 'IT SAW THE EMPTY SPACE' : 'SOMEONE IS IN THE HALLWAY';
+      dom.monsterOverlay.style.display = 'flex';
+      dom.monsterOverlay.classList.add('strobe');
+      setTimeout(() => {
+        if (dom.monsterFallback) {
+          dom.monsterFallback.style.display = 'flex';
+        }
+      }, 120);
+      setTimeout(() => {
+        if (dom.monsterOverlay.style.display === 'flex') {
+          dom.monsterOverlay.style.display = 'none';
+          dom.monsterOverlay.classList.remove('strobe');
+        }
+      }, 850);
+    }
+
+    function triggerPurge(reason) {
+      state.gameActive = false;
+      dom.monsterOverlay.style.display = 'flex';
+      dom.monsterOverlay.classList.add('strobe');
+      dom.entityCaption.textContent = reason === 'FATIGUE' ? 'FATIGUE DETECTED' : reason === 'ABSENCE' ? 'SUBJECT LOST' : 'THE DOOR IS OPEN';
+      if (state.audioCtx) {
+        const ctx = state.audioCtx;
+        const now = ctx.currentTime;
+        const buffer = ctx.createBuffer(1, ctx.sampleRate * 2.5, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < data.length; i++) {
+          const t = i / data.length;
+          data[i] = (Math.random() * 2 - 1) * (1 - t * 0.2);
+        }
+        const src = ctx.createBufferSource();
+        src.buffer = buffer;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 220;
+        filter.Q.value = 0.9;
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.9, now + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.2);
+        src.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        src.start();
+      }
+      setTimeout(() => location.reload(), 2600);
+    }
+
+    function winGame() {
+      state.gameActive = false;
+      dom.terminal.innerHTML = '<div style="padding: 2rem 0; text-align:center;"><h1 style="font-family:Cormorant Garamond, serif; letter-spacing:0.12em; font-size: clamp(2.8rem, 6vw, 5rem); color: var(--green); margin-bottom: 1rem;">VAULT_CLEARED</h1><p style="color: rgba(240,244,235,0.54); line-height: 1.9; max-width: 42rem; margin: 0 auto;">Sync finalized. The registry is quiet, but something is still standing on the other side of the door. Do not answer if it knocks.</p></div>';
+      dom.terminal.style.display = 'block';
+      dom.terminal.classList.add('terminal-open');
+      dom.monsterOverlay.style.display = 'none';
+    }
+
+    function showHint() {
+      const scene = currentLevelData();
+      if (!scene) return;
+      dom.feedback.className = 'feedback';
+      dom.feedback.innerHTML = `<span style="color: rgba(255,255,255,0.72);">HINT:</span> ${scene.hint}`;
+      state.hintShown = true;
+    }
+
+    function fillQuery(value) {
+      dom.queryInput.focus();
+      dom.queryInput.value = value + (dom.queryInput.value || '');
+    }
+
+    function updateQueryUI() {
+      dom.challenge.textContent = currentLevelData().quest;
+      dom.narrativeTitle.textContent = currentLevelData().title;
+      dom.narrativeEyebrow.textContent = `CHAPTER ${currentLevelData().chapter}`;
+      dom.chNum.textContent = currentLevelData().chapter;
+      setSceneTheme(currentLevelData());
+    }
+
+    document.getElementById('query-input').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        checkAnswer();
+      }
+    });
+
+    document.querySelectorAll('.mini-chip[data-fill]').forEach(button => {
+      button.addEventListener('click', () => fillQuery(button.getAttribute('data-fill')));
+    });
+
+    document.getElementById('hint-btn').addEventListener('click', showHint);
+
+    document.addEventListener('mousemove', (event) => {
+      const x = (event.clientX / window.innerWidth) * 100;
+      const y = (event.clientY / window.innerHeight) * 100;
+      document.getElementById('flashlight').style.background = `radial-gradient(circle at ${x}% ${y}%, transparent 0%, rgba(0,0,0,0.96) 32%, rgba(0,0,0,0.995) 64%)`;
+      const cursor = document.getElementById('custom-cursor');
+      cursor.style.left = `${event.clientX}px`;
+      cursor.style.top = `${event.clientY}px`;
+    });
+
+    document.addEventListener('click', () => {
+      if (state.audioCtx && state.audioCtx.state === 'suspended') {
+        state.audioCtx.resume();
+      }
+    }, { once: true });
+
+    document.getElementById('monster').addEventListener('error', () => {
+      dom.monster.style.display = 'none';
+      dom.monsterFallback.style.display = 'flex';
+    });
+
+    document.getElementById('monster').addEventListener('load', () => {
+      dom.monster.style.display = 'none';
+      dom.monsterFallback.style.display = 'flex';
+    });
+
+    window.addEventListener('blur', () => {
+      if (state.gameActive) {
+        triggerGlitch(1.3);
+      }
+    });
+
+    function showLevelTransition(initial = false) {
+      const scene = currentLevelData();
+      dom.transition.classList.remove('active');
+      dom.transition.style.display = 'none';
+      dom.narrative.classList.add('active');
+      dom.proceedBtn.style.display = 'none';
+      dom.narrativeEyebrow.textContent = `CHAPTER ${scene.chapter}`;
+      dom.narrativeTitle.textContent = scene.title;
+      dom.narrativeBox.textContent = '';
+      state.transitionLock = true;
+      typewriter(initial ? scene.log : `${scene.log}\n\n${scene.caption}\n\nDo not let the hallway go quiet.`, dom.narrativeBox, () => {
+        dom.proceedBtn.style.display = 'inline-flex';
+        state.transitionLock = false;
+      }, 14);
+      updateQueryUI();
+    }
+
+    dom.transition.addEventListener('click', (event) => {
+      if (event.target === dom.transition) {
+        dom.proceedBtn.style.display = 'inline-flex';
+      }
+    });
+
+    window.initVault = initVault;
+    window.openTerminal = openTerminal;
+    window.skipNarrative = skipNarrative;
+
+    setSceneTheme(levels[0]);
+    dom.pulseReadout.textContent = `${state.currentBPM} BPM`;
+    dom.feedback.textContent = 'Press ENGAGE SYNC to begin. The room will get louder once you do.';
+  </script>
+</body>
+</html>
