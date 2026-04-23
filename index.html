@@ -259,12 +259,25 @@
     }
 
     #boot-screen {
-      background: #000;
+      background: linear-gradient(180deg, #0a0f0a 0%, #050806 100%);
       z-index: 10000;
       display: flex;
       flex-direction: column;
       gap: 2rem;
       padding: 3rem 2rem;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    #boot-screen::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(200, 220, 100, 0.02), transparent 50%), 
+                  radial-gradient(circle at 70% 30%, rgba(180, 200, 80, 0.015), transparent 40%);
+      pointer-events: none;
+      z-index: -1;
     }
 
     .boot-card,
@@ -330,7 +343,7 @@
     }
 
     .eyebrow {
-      color: rgba(255, 255, 255, 0.48);
+      color: rgba(200, 220, 100, 0.72);
       letter-spacing: 0.12em;
       text-transform: uppercase;
       font-size: 0.68rem;
@@ -346,14 +359,14 @@
       line-height: 1.1;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #fff;
-      text-shadow: none;
+      color: #e8f0d0;
+      text-shadow: 0 0 20px rgba(200, 220, 100, 0.15);
       font-weight: 700;
     }
 
     .subtitle {
       margin-top: 1.4rem;
-      color: rgba(255, 255, 255, 0.56);
+      color: rgba(210, 220, 190, 0.64);
       line-height: 1.8;
       letter-spacing: 0.01em;
       font-size: 0.92rem;
@@ -397,22 +410,22 @@
     }
 
     .chip {
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      background: transparent;
-      color: rgba(255, 255, 255, 0.54);
+      border: 1px solid rgba(200, 220, 100, 0.28);
+      background: rgba(200, 220, 100, 0.06);
+      color: rgba(210, 220, 190, 0.72);
       font-size: 0.64rem;
       letter-spacing: 0.08em;
       padding: 0.4rem 0.6rem;
       text-transform: uppercase;
-      box-shadow: none;
+      box-shadow: 0 0 8px rgba(200, 220, 100, 0.08);
       font-family: 'Space Mono', monospace;
     }
 
     .btn-ui {
       appearance: none;
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      background: transparent;
-      color: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(200, 220, 100, 0.34);
+      background: rgba(200, 220, 100, 0.08);
+      color: rgba(210, 220, 190, 0.84);
       padding: 0.72rem 1rem;
       font-family: 'Space Mono', monospace;
       letter-spacing: 0.08em;
@@ -427,23 +440,23 @@
     .btn-ui:focus-visible {
       transform: none;
       letter-spacing: 0.12em;
-      background: rgba(255, 255, 255, 0.08);
-      color: #fff;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
+      background: rgba(200, 220, 100, 0.18);
+      color: #e8f0d0;
+      box-shadow: inset 0 0 0 1px rgba(200, 220, 100, 0.4), 0 0 12px rgba(200, 220, 100, 0.12);
       outline: none;
     }
 
     .btn-ui.alt {
-      border-color: rgba(255, 255, 255, 0.12);
-      color: rgba(255, 255, 255, 0.48);
+      border-color: rgba(200, 220, 100, 0.16);
+      color: rgba(210, 220, 190, 0.56);
       background: transparent;
     }
 
     .btn-ui.alt:hover,
     .btn-ui.alt:focus-visible {
-      background: transparent;
-      color: rgba(255, 255, 255, 0.64);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+      background: rgba(200, 220, 100, 0.12);
+      color: rgba(210, 220, 190, 0.78);
+      box-shadow: inset 0 0 0 1px rgba(200, 220, 100, 0.28);
     }
 
     #transition-overlay {
@@ -827,6 +840,21 @@
     #jumpscare-overlay.active {
       display: flex;
       animation: scarePulse 95ms linear 8;
+    }
+
+    #jumpscare-overlay.active ~ #viewport,
+    body.with-jumpscare #viewport {
+      filter: brightness(0.28) saturate(0.4);
+    }
+
+    #jumpscare-overlay.active ~ #viewport::after,
+    body.with-jumpscare #viewport::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.64);
+      pointer-events: none;
+      z-index: 11000;
     }
 
     #jumpscare-overlay.active .monster-door,
