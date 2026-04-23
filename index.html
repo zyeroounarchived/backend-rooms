@@ -259,30 +259,24 @@
     }
 
     #boot-screen {
-      background:
-        radial-gradient(circle at center, rgba(255, 208, 124, 0.05), transparent 32%),
-        linear-gradient(180deg, #000, #050505 60%, #000);
+      background: #000;
       z-index: 10000;
       display: flex;
       flex-direction: column;
-      gap: 1.6rem;
+      gap: 2rem;
+      padding: 3rem 2rem;
     }
 
     .boot-card,
     .transition-card,
     .narrative-card {
-      width: min(92vw, 760px);
-      border: 1px solid rgba(255,255,255,0.08);
-      background:
-        linear-gradient(180deg, rgba(8, 8, 9, 0.97), rgba(1, 1, 2, 0.99)),
-        radial-gradient(circle at 50% 0%, rgba(255, 158, 44, 0.05), transparent 30%);
-      box-shadow:
-        0 0 90px rgba(0,0,0,0.94),
-        inset 0 0 0 1px rgba(255,255,255,0.02),
-        inset 0 0 40px rgba(255, 128, 43, 0.04);
-      backdrop-filter: blur(14px) saturate(0.85);
+      width: min(100%, 560px);
+      border: none;
+      background: transparent;
+      box-shadow: none;
+      backdrop-filter: none;
       position: relative;
-      overflow: hidden;
+      overflow: visible;
     }
 
     .boot-card::before,
@@ -292,11 +286,10 @@
       content: '';
       position: absolute;
       inset: 0;
-      background:
-        linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.05) 40%, rgba(255, 174, 72, 0.08) 50%, transparent 100%);
-      opacity: 0.48;
-      transform: translateX(-80%);
-      animation: shimmer 6s linear infinite;
+      background: none;
+      opacity: 0;
+      transform: none;
+      animation: none;
       pointer-events: none;
     }
 
@@ -337,34 +330,34 @@
     }
 
     .eyebrow {
-      color: rgba(255, 205, 130, 0.92);
-      letter-spacing: 0.52em;
+      color: rgba(255, 255, 255, 0.48);
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      font-size: 0.66rem;
-      margin-bottom: 1rem;
-      opacity: 0.9;
-      font-family: 'IM Fell English SC', serif;
+      font-size: 0.68rem;
+      margin-bottom: 1.2rem;
+      opacity: 1;
+      font-family: 'Space Mono', monospace;
+      font-weight: 400;
     }
 
     .title {
-      font-family: 'IM Fell English SC', serif;
-      font-size: clamp(2.8rem, 7vw, 5.8rem);
-      line-height: 0.88;
-      letter-spacing: 0.14em;
+      font-family: 'Space Mono', monospace;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      line-height: 1.1;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #fff4de;
-      text-shadow:
-        0 0 18px rgba(255,255,255,0.05),
-        0 0 32px rgba(255, 170, 72, 0.16),
-        2px 0 0 rgba(255, 88, 88, 0.06);
+      color: #fff;
+      text-shadow: none;
+      font-weight: 700;
     }
 
     .subtitle {
-      margin-top: 1rem;
-      color: rgba(242, 235, 224, 0.74);
-      line-height: 1.9;
-      letter-spacing: 0.06em;
-      font-size: 0.95rem;
+      margin-top: 1.4rem;
+      color: rgba(255, 255, 255, 0.56);
+      line-height: 1.8;
+      letter-spacing: 0.01em;
+      font-size: 0.92rem;
+      font-family: 'Space Mono', monospace;
     }
 
     .story-objective {
@@ -399,57 +392,58 @@
       display: flex;
       gap: 0.8rem;
       flex-wrap: wrap;
-      justify-content: center;
-      margin-top: 1.5rem;
+      justify-content: flex-start;
+      margin-top: 2rem;
     }
 
     .chip {
-      border: 1px solid rgba(255, 202, 126, 0.12);
-      background: rgba(255, 182, 88, 0.03);
-      color: rgba(244, 240, 230, 0.8);
-      font-size: 0.68rem;
-      letter-spacing: 0.26em;
-      padding: 0.65rem 0.9rem;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: transparent;
+      color: rgba(255, 255, 255, 0.54);
+      font-size: 0.64rem;
+      letter-spacing: 0.08em;
+      padding: 0.4rem 0.6rem;
       text-transform: uppercase;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+      box-shadow: none;
+      font-family: 'Space Mono', monospace;
     }
 
     .btn-ui {
       appearance: none;
-      border: 1px solid rgba(180,255,141,0.62);
-      background: linear-gradient(180deg, rgba(180,255,141,0.07), rgba(180,255,141,0.015));
-      color: var(--green);
-      padding: 0.92rem 1.2rem;
-      font-family: inherit;
-      letter-spacing: 0.22em;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: transparent;
+      color: rgba(255, 255, 255, 0.72);
+      padding: 0.72rem 1rem;
+      font-family: 'Space Mono', monospace;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      font-size: 0.77rem;
-      transition: transform 140ms ease, background 180ms ease, color 180ms ease, box-shadow 180ms ease, border-color 180ms ease, letter-spacing 180ms ease;
+      font-size: 0.72rem;
+      transition: all 140ms ease;
       cursor: pointer;
-      text-shadow: 0 0 10px rgba(180,255,141,0.2);
+      text-shadow: none;
     }
 
     .btn-ui:hover,
     .btn-ui:focus-visible {
-      transform: translateY(-1px);
-      letter-spacing: 0.28em;
-      background: rgba(180,255,141,0.95);
-      color: #041004;
-      box-shadow: 0 0 28px rgba(180,255,141,0.34), 0 0 50px rgba(255, 163, 55, 0.1);
+      transform: none;
+      letter-spacing: 0.12em;
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
       outline: none;
     }
 
     .btn-ui.alt {
-      border-color: rgba(255, 202, 126, 0.16);
-      color: rgba(248, 242, 232, 0.84);
-      background: rgba(255, 202, 126, 0.03);
+      border-color: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.48);
+      background: transparent;
     }
 
     .btn-ui.alt:hover,
     .btn-ui.alt:focus-visible {
-      background: rgba(255, 210, 150, 0.9);
-      color: #090909;
-      box-shadow: 0 0 18px rgba(255,210,150,0.2);
+      background: transparent;
+      color: rgba(255, 255, 255, 0.64);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
     }
 
     #transition-overlay {
@@ -572,21 +566,34 @@
     }
 
     #terminal-wrap {
-      position: relative;
+      position: fixed;
+      left: 0;
+      top: 0;
       z-index: 300;
-      width: min(92vw, 920px);
+      width: 100%;
+      height: 100vh;
       padding: clamp(1.4rem, 3vw, 2.4rem);
-      background:
-        linear-gradient(180deg, rgba(10, 10, 11, 0.98), rgba(3, 3, 4, 0.99)),
-        radial-gradient(circle at 50% 0%, rgba(255, 188, 92, 0.11), transparent 42%);
-      border: 1px solid rgba(255, 214, 142, 0.28);
-      box-shadow:
-        0 0 150px rgba(0,0,0,0.9),
-        inset 0 0 0 1px rgba(255,255,255,0.05),
-        inset 0 0 56px rgba(255, 186, 80, 0.08);
+      background: linear-gradient(180deg, rgba(10, 10, 11, 0.98), rgba(3, 3, 4, 0.99));
+      border: none;
+      box-shadow: none;
       display: none;
-      transform: translateY(8px) scale(0.98);
-      transition: transform 220ms ease, opacity 220ms ease, box-shadow 220ms ease;
+      transform: none;
+      transition: max-width 220ms ease;
+      overflow-y: auto;
+      max-width: 100%;
+    }
+
+    body.with-jumpscare #terminal-wrap {
+      max-width: calc(100vw - 32vw);
+    }
+
+    .terminal-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      max-width: min(100%, 560px);
+      margin: 0 auto;
+      padding: 0 1rem;
     }
 
     body.terminal-mode #flashlight {
@@ -804,33 +811,22 @@
 
     #jumpscare-overlay {
       position: fixed;
-      inset: 0;
-      z-index: 12000;
+      right: 0;
+      top: 0;
+      width: 32vw;
+      height: 100vh;
+      z-index: 5000;
       display: none;
       align-items: center;
       justify-content: center;
-      background: radial-gradient(circle at center, rgba(255,255,255,0.04), rgba(0,0,0,1) 60%);
+      background: #000;
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
       overflow: hidden;
-    }
-
-    #jumpscare-overlay::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      opacity: 0;
-      box-shadow: inset 0 0 180px rgba(0,0,0,0.94), inset 0 0 320px rgba(0,0,0,0.86);
-      transition: opacity 80ms linear;
     }
 
     #jumpscare-overlay.active {
       display: flex;
       animation: scarePulse 95ms linear 8;
-      background: #000;
-    }
-
-    #jumpscare-overlay.active::after {
-      opacity: 1;
     }
 
     #jumpscare-overlay.active .monster-door,
@@ -850,8 +846,8 @@
 
     .monster-stage {
       position: relative;
-      width: min(100vw, 100vw);
-      height: 100vh;
+      width: 100%;
+      height: 100%;
       display: grid;
       place-items: center;
     }
@@ -859,21 +855,19 @@
     .monster-door {
       position: absolute;
       inset: 0;
-      background:
-        linear-gradient(90deg, rgba(255,255,255,0.015) 0 34%, rgba(0,0,0,0.48) 34% 100%),
-        linear-gradient(180deg, rgba(255,255,255,0.035), transparent 36%, rgba(0,0,0,0.56));
-      opacity: 0.95;
+      background: transparent;
+      opacity: 0;
     }
 
     .monster-shell {
       position: relative;
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
-      transform: translateY(2vh) scale(1.02);
-      filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.05));
+      transform: scale(1);
+      filter: none;
     }
 
     #jumpscare-overlay.active .monster-shell {
@@ -883,30 +877,29 @@
     .monster-shell::before {
       content: '';
       position: absolute;
-      inset: 6% 10%;
-      background: radial-gradient(circle at 70% 34%, rgba(255,255,255,0.035), transparent 16%), radial-gradient(circle at 42% 52%, rgba(255,98,98,0.08), transparent 28%);
-      mix-blend-mode: screen;
+      inset: 0;
+      background: none;
+      mix-blend-mode: normal;
       pointer-events: none;
-      animation: tremor 0.06s infinite;
+      animation: none;
     }
 
     .monster-figure {
-      position: absolute;
-      inset: 0;
+      position: relative;
       width: 100%;
       height: 100%;
       object-fit: contain;
-      object-position: center 46%;
+      object-position: center;
       opacity: 0;
-      transform: scale(0.98);
-      filter: grayscale(0.2) contrast(1.46) saturate(0.52) brightness(0.84);
+      transform: scale(1);
+      filter: brightness(0.72);
       transition: opacity 90ms ease, transform 360ms ease;
       pointer-events: none;
     }
 
     #jumpscare-overlay.active .monster-figure {
       opacity: 1;
-      transform: scale(1.08);
+      transform: scale(0.95);
     }
 
     #loss-footage-overlay {
@@ -1212,9 +1205,9 @@
     }
 
     @keyframes lungeIn {
-      0% { transform: translateY(6vh) scale(0.94); filter: blur(4px) brightness(0.45); }
-      30% { transform: translateY(2vh) scale(1.02); filter: blur(1px) brightness(0.82); }
-      100% { transform: translateY(-2vh) scale(1.08); filter: blur(0) brightness(1.16); }
+      0% { transform: scale(0.88); filter: blur(6px) brightness(0.3); opacity: 0.3; }
+      50% { transform: scale(0.98); filter: blur(2px) brightness(0.64); opacity: 0.7; }
+      100% { transform: scale(1); filter: blur(0) brightness(1); opacity: 1; }
     }
 
     @keyframes scarePulse {
@@ -1420,56 +1413,58 @@
     </div>
 
     <div id="terminal-wrap">
-      <div class="terminal-header">
-        <span>TERMINAL_SYNC_V5.4</span>
-        <span id="sid">SID: NULL</span>
-        <span id="camera-status">CAM: OFFLINE</span>
-      </div>
+      <div class="terminal-content">
+        <div class="terminal-header">
+          <span>TERMINAL_SYNC_V5.4</span>
+          <span id="sid">SID: NULL</span>
+          <span id="camera-status">CAM: OFFLINE</span>
+        </div>
 
-      <div class="objective-module">
-        <div id="challenge-text"></div>
-      </div>
+        <div class="objective-module">
+          <div id="challenge-text"></div>
+        </div>
 
-      <div class="query-console">
-        <div class="query-row">
-          <div class="prompt-label">sql&gt;</div>
-          <input id="query-input" class="query-input" type="text" autocomplete="off" spellcheck="false" placeholder="Type the query, then press Enter..." />
+        <div class="query-console">
+          <div class="query-row">
+            <div class="prompt-label">sql&gt;</div>
+            <input id="query-input" class="query-input" type="text" autocomplete="off" spellcheck="false" placeholder="Type the query, then press Enter..." />
+          </div>
+          <div class="micro-suggestions">
+            <button class="mini-chip" data-fill="SELECT * FROM ">SELECT *</button>
+            <button class="mini-chip" data-fill="WHERE ">WHERE</button>
+            <button class="mini-chip" data-fill="ORDER BY ">ORDER BY</button>
+            <button class="mini-chip" data-fill="GROUP BY ">GROUP BY</button>
+            <button class="mini-chip" data-fill="HAVING ">HAVING</button>
+            <button class="mini-chip" data-fill="IS NULL">IS NULL</button>
+            <button class="mini-chip" id="hint-btn">HINT</button>
+          </div>
         </div>
-        <div class="micro-suggestions">
-          <button class="mini-chip" data-fill="SELECT * FROM ">SELECT *</button>
-          <button class="mini-chip" data-fill="WHERE ">WHERE</button>
-          <button class="mini-chip" data-fill="ORDER BY ">ORDER BY</button>
-          <button class="mini-chip" data-fill="GROUP BY ">GROUP BY</button>
-          <button class="mini-chip" data-fill="HAVING ">HAVING</button>
-          <button class="mini-chip" data-fill="IS NULL">IS NULL</button>
-          <button class="mini-chip" id="hint-btn">HINT</button>
-        </div>
-      </div>
 
-      <div class="status-row">
-        <div class="status-tile">
-          <span>Noise</span>
-          <strong id="noise-readout">0%</strong>
-          <div class="status-bar"><i id="noise-bar"></i></div>
+        <div class="status-row">
+          <div class="status-tile">
+            <span>Noise</span>
+            <strong id="noise-readout">0%</strong>
+            <div class="status-bar"><i id="noise-bar"></i></div>
+          </div>
+          <div class="status-tile">
+            <span>Focus</span>
+            <strong id="focus-readout">100%</strong>
+            <div class="status-bar"><i id="focus-bar"></i></div>
+          </div>
+          <div class="status-tile">
+            <span>Radiation</span>
+            <strong id="radiation-readout">0%</strong>
+            <div class="status-bar"><i id="radiation-bar"></i></div>
+          </div>
+          <div class="status-tile">
+            <span>Heartbeat</span>
+            <strong id="pulse-readout">--</strong>
+            <div class="status-bar"><i id="pulse-bar"></i></div>
+          </div>
         </div>
-        <div class="status-tile">
-          <span>Focus</span>
-          <strong id="focus-readout">100%</strong>
-          <div class="status-bar"><i id="focus-bar"></i></div>
-        </div>
-        <div class="status-tile">
-          <span>Radiation</span>
-          <strong id="radiation-readout">0%</strong>
-          <div class="status-bar"><i id="radiation-bar"></i></div>
-        </div>
-        <div class="status-tile">
-          <span>Heartbeat</span>
-          <strong id="pulse-readout">--</strong>
-          <div class="status-bar"><i id="pulse-bar"></i></div>
-        </div>
-      </div>
 
-      <div id="feedback" class="feedback"></div>
+        <div id="feedback" class="feedback"></div>
+      </div>
     </div>
   </div>
 
@@ -2208,6 +2203,7 @@
       dom.monsterOverlay.style.display = 'flex';
       dom.monsterOverlay.classList.add('active');
       dom.monsterOverlay.classList.add('strobe');
+      document.body.classList.add('with-jumpscare');
       playScareHit(state.maxScare ? 1.35 : 0.8);
       applyScareImpact(state.maxScare ? 520 : 220, state.maxScare ? 1.65 : 1.1);
       setTimeout(() => {
@@ -2220,6 +2216,7 @@
           dom.monsterOverlay.style.display = 'none';
           dom.monsterOverlay.classList.remove('active');
           dom.monsterOverlay.classList.remove('strobe');
+          document.body.classList.remove('with-jumpscare');
         }
       }, state.maxScare ? 1450 : 1100);
     }
@@ -2232,6 +2229,7 @@
       dom.monsterOverlay.style.display = 'flex';
       dom.monsterOverlay.classList.add('active');
       dom.monsterOverlay.classList.add('strobe');
+      document.body.classList.add('with-jumpscare');
       dom.entityCaption.textContent = reason === 'FATIGUE' ? 'FATIGUE DETECTED' : reason === 'ABSENCE' ? 'SUBJECT LOST' : 'THE DOOR IS OPEN';
       playScareHit(state.maxScare ? 1.95 : 1.15);
       applyScareImpact(state.maxScare ? 980 : 360, state.maxScare ? 2.2 : 1.25);
@@ -2255,6 +2253,7 @@
       dom.monsterOverlay.style.display = 'none';
       dom.monsterOverlay.classList.remove('active');
       dom.monsterOverlay.classList.remove('strobe');
+      document.body.classList.remove('with-jumpscare');
 
       if (state.scareAudio) {
         try {
