@@ -573,20 +573,24 @@
 
     #terminal-wrap {
       position: relative;
-      z-index: 200;
+      z-index: 300;
       width: min(92vw, 920px);
       padding: clamp(1.4rem, 3vw, 2.4rem);
       background:
-        linear-gradient(180deg, rgba(2, 2, 2, 0.99), rgba(0, 0, 0, 1)),
-        radial-gradient(circle at 50% 0%, rgba(255, 168, 58, 0.06), transparent 40%);
-      border: 1px solid rgba(255, 205, 130, 0.12);
+        linear-gradient(180deg, rgba(10, 10, 11, 0.98), rgba(3, 3, 4, 0.99)),
+        radial-gradient(circle at 50% 0%, rgba(255, 188, 92, 0.11), transparent 42%);
+      border: 1px solid rgba(255, 214, 142, 0.28);
       box-shadow:
-        0 0 140px rgba(0,0,0,0.96),
-        inset 0 0 0 1px rgba(255,255,255,0.02),
-        inset 0 0 40px rgba(255, 169, 58, 0.035);
+        0 0 150px rgba(0,0,0,0.9),
+        inset 0 0 0 1px rgba(255,255,255,0.05),
+        inset 0 0 56px rgba(255, 186, 80, 0.08);
       display: none;
       transform: translateY(8px) scale(0.98);
       transition: transform 220ms ease, opacity 220ms ease, box-shadow 220ms ease;
+    }
+
+    body.terminal-mode #flashlight {
+      background: radial-gradient(circle at 50% 50%, transparent 0%, rgba(0,0,0,0.68) 50%, rgba(0,0,0,0.82) 100%);
     }
 
     .terminal-header {
@@ -595,7 +599,7 @@
       align-items: center;
       gap: 1rem;
       margin-bottom: 1.2rem;
-      color: rgba(245,239,228,0.42);
+      color: rgba(245,239,228,0.66);
       font-size: 0.64rem;
       letter-spacing: 0.38em;
       text-transform: uppercase;
@@ -629,10 +633,10 @@
     #challenge-text {
       position: relative;
       z-index: 1;
-      color: #f3ede3;
-      font-size: 0.96rem;
+      color: #fff8ea;
+      font-size: 1rem;
       line-height: 1.8;
-      text-shadow: 0 0 10px rgba(255, 177, 74, 0.08);
+      text-shadow: 0 0 14px rgba(255, 177, 74, 0.2);
     }
 
     .query-console {
@@ -652,7 +656,7 @@
     }
 
     .prompt-label {
-      color: rgba(255, 205, 130, 0.3);
+      color: rgba(255, 220, 168, 0.62);
       white-space: nowrap;
       font-size: 0.82rem;
       letter-spacing: 0.3em;
@@ -663,13 +667,13 @@
       flex: 1;
       background: transparent;
       border: none;
-      color: var(--green);
+      color: #d8ffc5;
       font-family: inherit;
       font-size: 1rem;
       line-height: 1.6;
       outline: none;
       caret-color: var(--green);
-      text-shadow: 0 0 12px rgba(180, 255, 141, 0.08);
+      text-shadow: 0 0 14px rgba(180, 255, 141, 0.22);
     }
 
     .query-input::placeholder {
@@ -678,9 +682,9 @@
 
     .feedback {
       min-height: 3rem;
-      font-size: 0.8rem;
+      font-size: 0.88rem;
       line-height: 1.7;
-      color: rgba(245, 248, 243, 0.54);
+      color: rgba(245, 248, 243, 0.82);
       letter-spacing: 0.02em;
     }
 
@@ -710,7 +714,7 @@
 
     .status-tile strong {
       font-size: 0.95rem;
-      color: #f8f7f1;
+      color: #fffdf8;
       letter-spacing: 0.14em;
       font-weight: 700;
       text-shadow: 0 0 10px rgba(255, 176, 72, 0.08);
@@ -809,8 +813,17 @@
       overflow: hidden;
     }
 
+    #jumpscare-overlay.active {
+      display: flex;
+      animation: scarePulse 95ms linear 8;
+    }
+
     #jumpscare-overlay.strobe {
       animation: strobe-anim 0.08s infinite;
+    }
+
+    #jumpscare-overlay.active.strobe {
+      animation: strobe-anim 0.06s infinite, scarePulse 95ms linear 8;
     }
 
     .monster-stage {
@@ -841,6 +854,10 @@
       filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.05));
     }
 
+    #jumpscare-overlay.active .monster-shell {
+      animation: lungeIn 620ms cubic-bezier(0.04, 0.92, 0.2, 1);
+    }
+
     .monster-shell::before {
       content: '';
       position: absolute;
@@ -853,10 +870,21 @@
 
     .monster-figure {
       position: absolute;
-      width: 1px;
-      height: 1px;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 56% 50%;
       opacity: 0;
+      transform: scale(1.06);
+      filter: grayscale(0.16) contrast(1.38) saturate(0.55) brightness(0.88);
+      transition: opacity 90ms ease, transform 360ms ease;
       pointer-events: none;
+    }
+
+    #jumpscare-overlay.active .monster-figure {
+      opacity: 1;
+      transform: scale(1.32);
     }
 
     .monster-fallback {
@@ -867,6 +895,11 @@
       justify-content: flex-end;
       padding-right: 7%;
       pointer-events: none;
+      transition: opacity 140ms linear;
+    }
+
+    #jumpscare-overlay.active.image-ready .monster-fallback {
+      opacity: 0;
     }
 
     .monster-door-panel {
@@ -1089,6 +1122,8 @@
       background: rgba(0,0,0,0.56);
       border: 1px solid rgba(255, 205, 130, 0.1);
       backdrop-filter: blur(10px);
+      text-shadow: 0 0 12px rgba(255,255,255,0.25);
+      animation: captionFlicker 140ms steps(2, end) 4;
     }
 
     #video-hidden {
@@ -1130,6 +1165,24 @@
       0% { background: #000; }
       50% { background: #111; }
       100% { background: #000; }
+    }
+
+    @keyframes lungeIn {
+      0% { transform: translateY(8vh) scale(0.9); filter: blur(4px) brightness(0.45); }
+      30% { transform: translateY(2vh) scale(1.06); filter: blur(1px) brightness(0.82); }
+      100% { transform: translateY(-5vh) scale(1.28); filter: blur(0) brightness(1.16); }
+    }
+
+    @keyframes scarePulse {
+      0% { background-color: rgba(0,0,0,0.98); }
+      45% { background-color: rgba(255,255,255,0.16); }
+      100% { background-color: rgba(0,0,0,0.98); }
+    }
+
+    @keyframes captionFlicker {
+      0%, 100% { opacity: 1; }
+      35% { opacity: 0.45; }
+      70% { opacity: 0.8; }
     }
 
     @keyframes tremor {
@@ -1515,6 +1568,8 @@
 
     const searchParams = new URLSearchParams(window.location.search);
     const forceLite = searchParams.get('lite') === '1';
+    const calmMode = searchParams.get('calm') === '1';
+    state.maxScare = !calmMode;
     state.lowPerfMode = forceLite
       || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4)
       || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1934,6 +1989,7 @@
         winGame();
         return;
       }
+      document.body.classList.remove('terminal-mode');
       state.transitionLock = true;
       dom.terminal.style.display = 'none';
       dom.transitionNumber.textContent = `CHAPTER ${scene.chapter}`;
@@ -1993,6 +2049,7 @@
       dom.terminal.style.display = 'block';
       dom.terminal.style.opacity = '1';
       dom.terminal.classList.add('terminal-open');
+      document.body.classList.add('terminal-mode');
       dom.queryInput.value = '';
       dom.queryInput.focus();
       dom.proceedBtn.style.display = 'none';
@@ -2014,6 +2071,7 @@
         return;
       }
       state.gameActive = false;
+      document.body.classList.remove('terminal-mode');
       dom.terminal.classList.remove('terminal-open');
       dom.terminal.style.opacity = '0';
       setTimeout(() => {
@@ -2082,7 +2140,10 @@
       if (dom.monsterOverlay.style.display === 'flex') return;
       dom.entityCaption.textContent = reason === 'voice' ? 'IT HEARD YOU' : reason === 'absence' ? 'IT SAW THE EMPTY SPACE' : 'SOMEONE IS IN THE HALLWAY';
       dom.monsterOverlay.style.display = 'flex';
+      dom.monsterOverlay.classList.add('active');
       dom.monsterOverlay.classList.add('strobe');
+      playScareHit(state.maxScare ? 1.35 : 0.8);
+      applyScareImpact(state.maxScare ? 520 : 220, state.maxScare ? 1.65 : 1.1);
       setTimeout(() => {
         if (dom.monsterFallback) {
           dom.monsterFallback.style.display = 'flex';
@@ -2091,16 +2152,20 @@
       setTimeout(() => {
         if (dom.monsterOverlay.style.display === 'flex') {
           dom.monsterOverlay.style.display = 'none';
+          dom.monsterOverlay.classList.remove('active');
           dom.monsterOverlay.classList.remove('strobe');
         }
-      }, 850);
+      }, state.maxScare ? 1450 : 1100);
     }
 
     function triggerPurge(reason) {
       state.gameActive = false;
       dom.monsterOverlay.style.display = 'flex';
+      dom.monsterOverlay.classList.add('active');
       dom.monsterOverlay.classList.add('strobe');
       dom.entityCaption.textContent = reason === 'FATIGUE' ? 'FATIGUE DETECTED' : reason === 'ABSENCE' ? 'SUBJECT LOST' : 'THE DOOR IS OPEN';
+      playScareHit(state.maxScare ? 1.95 : 1.15);
+      applyScareImpact(state.maxScare ? 980 : 360, state.maxScare ? 2.2 : 1.25);
       if (state.audioCtx) {
         const ctx = state.audioCtx;
         const now = ctx.currentTime;
@@ -2125,7 +2190,99 @@
         gain.connect(ctx.destination);
         src.start();
       }
-      setTimeout(() => location.reload(), 2600);
+      setTimeout(() => location.reload(), state.maxScare ? 3400 : 2600);
+    }
+
+    function applyScareImpact(durationMs = 400, intensity = 1.2) {
+      if (state.lowPerfMode) return;
+      const viewport = document.getElementById('viewport');
+      viewport.style.filter = `invert(${clamp(intensity * 0.35, 0, 1)}) contrast(${2 + intensity}) saturate(0.45)`;
+      document.body.classList.add('screen-shake');
+      const start = performance.now();
+      const pulse = () => {
+        const elapsed = performance.now() - start;
+        if (elapsed >= durationMs) {
+          viewport.style.filter = 'saturate(0.92) contrast(1.05)';
+          document.body.classList.remove('screen-shake');
+          return;
+        }
+        if (elapsed % 120 < 60) {
+          document.body.classList.add('screen-shake');
+        } else {
+          document.body.classList.remove('screen-shake');
+        }
+        requestAnimationFrame(pulse);
+      };
+      requestAnimationFrame(pulse);
+    }
+
+    function playScareHit(power = 1) {
+      if (!state.audioCtx) return;
+      const ctx = state.audioCtx;
+      const now = ctx.currentTime;
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.0001, now);
+      const attack = state.maxScare ? 0.015 : 0.025;
+      const hold = state.maxScare ? 1.15 : 0.9;
+      master.gain.exponentialRampToValueAtTime(clamp(0.56 * power, 0.2, 0.95), now + attack);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + hold);
+      master.connect(ctx.destination);
+
+      const scream = ctx.createOscillator();
+      scream.type = 'sawtooth';
+      scream.frequency.setValueAtTime(1280, now);
+      scream.frequency.exponentialRampToValueAtTime(220, now + 0.5);
+      const screamFilter = ctx.createBiquadFilter();
+      screamFilter.type = 'bandpass';
+      screamFilter.frequency.setValueAtTime(980, now);
+      screamFilter.Q.value = 1.4;
+      scream.connect(screamFilter);
+      screamFilter.connect(master);
+      scream.start(now);
+      scream.stop(now + (state.maxScare ? 0.72 : 0.55));
+
+      const hiss = ctx.createBufferSource();
+      hiss.buffer = createNoiseBuffer(0.9);
+      const hissFilter = ctx.createBiquadFilter();
+      hissFilter.type = 'highpass';
+      hissFilter.frequency.setValueAtTime(1400, now);
+      const hissGain = ctx.createGain();
+      hissGain.gain.setValueAtTime(0.0001, now);
+      hissGain.gain.exponentialRampToValueAtTime(0.26 * power, now + 0.02);
+      hissGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+      hiss.connect(hissFilter);
+      hissFilter.connect(hissGain);
+      hissGain.connect(master);
+      hiss.start(now);
+      hiss.stop(now + (state.maxScare ? 0.62 : 0.43));
+
+      const slam = ctx.createOscillator();
+      slam.type = 'triangle';
+      slam.frequency.setValueAtTime(84, now);
+      slam.frequency.exponentialRampToValueAtTime(44, now + 0.28);
+      const slamGain = ctx.createGain();
+      slamGain.gain.setValueAtTime(0.0001, now);
+      slamGain.gain.exponentialRampToValueAtTime(0.36 * power, now + 0.018);
+      slamGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
+      slam.connect(slamGain);
+      slamGain.connect(master);
+      slam.start(now);
+      slam.stop(now + 0.31);
+
+      if (state.maxScare) {
+        const sub = ctx.createOscillator();
+        sub.type = 'square';
+        sub.frequency.setValueAtTime(52, now);
+        sub.frequency.exponentialRampToValueAtTime(28, now + 0.42);
+        const subGain = ctx.createGain();
+        subGain.gain.setValueAtTime(0.0001, now);
+        subGain.gain.exponentialRampToValueAtTime(0.33 * power, now + 0.02);
+        subGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+        sub.connect(subGain);
+        subGain.connect(master);
+        sub.start(now);
+        sub.stop(now + 0.48);
+      }
     }
 
     function winGame() {
@@ -2179,7 +2336,10 @@
       state.cursorRaf = requestAnimationFrame(() => {
         const x = (state.mouseX / window.innerWidth) * 100;
         const y = (state.mouseY / window.innerHeight) * 100;
-        document.getElementById('flashlight').style.background = `radial-gradient(circle at ${x}% ${y}%, transparent 0%, rgba(0,0,0,0.96) 32%, rgba(0,0,0,0.995) 64%)`;
+        const inTerminal = document.body.classList.contains('terminal-mode');
+        const midDark = inTerminal ? 0.68 : 0.96;
+        const edgeDark = inTerminal ? 0.82 : 0.995;
+        document.getElementById('flashlight').style.background = `radial-gradient(circle at ${x}% ${y}%, transparent 0%, rgba(0,0,0,${midDark}) 32%, rgba(0,0,0,${edgeDark}) 64%)`;
         const cursor = document.getElementById('custom-cursor');
         cursor.style.left = `${state.mouseX}px`;
         cursor.style.top = `${state.mouseY}px`;
@@ -2195,11 +2355,13 @@
 
     document.getElementById('monster').addEventListener('error', () => {
       dom.monster.style.display = 'none';
+      dom.monsterOverlay.classList.remove('image-ready');
       dom.monsterFallback.style.display = 'flex';
     });
 
     document.getElementById('monster').addEventListener('load', () => {
-      dom.monster.style.display = 'none';
+      dom.monster.style.display = 'block';
+      dom.monsterOverlay.classList.add('image-ready');
       dom.monsterFallback.style.display = 'flex';
     });
 
