@@ -438,6 +438,10 @@
       opacity: 1;
     }
 
+    #narrative-overlay.active {
+      display: flex;
+    }
+
     .transition-card {
       transform: translateY(12px) scale(0.98);
       animation: riseCard 620ms cubic-bezier(0.2, 0.84, 0.2, 1) forwards;
@@ -1400,6 +1404,8 @@
       ambienceNodes: [],
       hintShown: false,
       transitionLock: false,
+      faceDetectBusy: false,
+      lowPerfMode: false,
       startedAt: Date.now()
     };
 
@@ -1439,6 +1445,9 @@
       monsterFallback: document.getElementById('monster-fallback'),
       entityCaption: document.getElementById('entity-caption')
     };
+
+    state.lowPerfMode = (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4)
+      || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     function clamp(value, min, max) {
       return Math.min(max, Math.max(min, value));
@@ -1606,7 +1615,10 @@
 
     function startSensorLoops() {
       const video = state.video;
-      const detectOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
+      const canUseFaceApi = state.faceReady && typeof window.faceapi !== 'undefined';
+      const detectOptions = canUseFaceApi
+        ? new faceapi.TinyFaceDetectorOptions({ inputSize: state.lowPerfMode ? 160 : 224, scoreThreshold: 0.5 })
+        : null;
       const loop = async () => {
         if (state.audioReady) {
           const micLevel = readMicRms();
@@ -1620,11 +1632,12 @@
           }
         }
 
-        if (state.cameraReady && state.faceReady && video && state.gameActive) {
+        if (state.cameraReady && canUseFaceApi && video && state.gameActive && !state.faceDetectBusy) {
           const now = performance.now();
-          if (now - state.lastFaceScan > 420) {
+          if (now - state.lastFaceScan > (state.lowPerfMode ? 700 : 420)) {
             state.lastFaceScan = now;
             try {
+              state.faceDetectBusy = true;
               const detection = await faceapi.detectSingleFace(video, detectOptions).withFaceLandmarks();
               if (!detection) {
                 state.noFaceTicks += 1;
@@ -1651,13 +1664,15 @@
               }
             } catch (error) {
               dom.bioLabel.textContent = 'BIO: STALL';
+            } finally {
+              state.faceDetectBusy = false;
             }
           }
         }
 
-        state.scheduleId = requestAnimationFrame(loop);
+        state.scheduleId = window.setTimeout(loop, state.lowPerfMode ? 120 : 80);
       };
-      state.scheduleId = requestAnimationFrame(loop);
+      state.scheduleId = window.setTimeout(loop, 0);
     }
 
     function startAudioLoops() {
@@ -1837,6 +1852,7 @@
       dom.transitionNumber.textContent = `CHAPTER ${scene.chapter}`;
       dom.transitionTitle.textContent = scene.title;
       dom.narrative.classList.add('active');
+      dom.narrative.style.display = 'flex';
       dom.transition.classList.add('active');
       setSceneTheme(scene);
       dom.chNum.textContent = scene.chapter;
@@ -1879,6 +1895,7 @@
       dom.transition.classList.remove('active');
       dom.transition.style.display = 'none';
       dom.narrative.classList.remove('active');
+      dom.narrative.style.display = 'none';
       dom.terminal.style.display = 'block';
       dom.terminal.classList.add('terminal-open');
       dom.queryInput.value = '';
@@ -2058,12 +2075,18 @@
     document.getElementById('hint-btn').addEventListener('click', showHint);
 
     document.addEventListener('mousemove', (event) => {
-      const x = (event.clientX / window.innerWidth) * 100;
-      const y = (event.clientY / window.innerHeight) * 100;
-      document.getElementById('flashlight').style.background = `radial-gradient(circle at ${x}% ${y}%, transparent 0%, rgba(0,0,0,0.96) 32%, rgba(0,0,0,0.995) 64%)`;
-      const cursor = document.getElementById('custom-cursor');
-      cursor.style.left = `${event.clientX}px`;
-      cursor.style.top = `${event.clientY}px`;
+      state.mouseX = event.clientX;
+      state.mouseY = event.clientY;
+      if (state.cursorRaf) return;
+      state.cursorRaf = requestAnimationFrame(() => {
+        const x = (state.mouseX / window.innerWidth) * 100;
+        const y = (state.mouseY / window.innerHeight) * 100;
+        document.getElementById('flashlight').style.background = `radial-gradient(circle at ${x}% ${y}%, transparent 0%, rgba(0,0,0,0.96) 32%, rgba(0,0,0,0.995) 64%)`;
+        const cursor = document.getElementById('custom-cursor');
+        cursor.style.left = `${state.mouseX}px`;
+        cursor.style.top = `${state.mouseY}px`;
+        state.cursorRaf = null;
+      });
     });
 
     document.addEventListener('click', () => {
@@ -2087,23 +2110,6 @@
         triggerGlitch(1.3);
       }
     });
-
-    function showLevelTransition(initial = false) {
-      const scene = currentLevelData();
-      dom.transition.classList.remove('active');
-      dom.transition.style.display = 'none';
-      dom.narrative.classList.add('active');
-      dom.proceedBtn.style.display = 'none';
-      dom.narrativeEyebrow.textContent = `CHAPTER ${scene.chapter}`;
-      dom.narrativeTitle.textContent = scene.title;
-      dom.narrativeBox.textContent = '';
-      state.transitionLock = true;
-      typewriter(initial ? scene.log : `${scene.log}\n\n${scene.caption}\n\nDo not let the hallway go quiet.`, dom.narrativeBox, () => {
-        dom.proceedBtn.style.display = 'inline-flex';
-        state.transitionLock = false;
-      }, 14);
-      updateQueryUI();
-    }
 
     dom.transition.addEventListener('click', (event) => {
       if (event.target === dom.transition) {
